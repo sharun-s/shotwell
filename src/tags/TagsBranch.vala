@@ -12,7 +12,8 @@ public class Tags.Branch : Sidebar.Branch {
             Sidebar.Branch.Options.HIDE_IF_EMPTY
                 | Sidebar.Branch.Options.AUTO_OPEN_ON_NEW_CHILD
                 | Sidebar.Branch.Options.STARTUP_OPEN_GROUPING,
-            comparator);
+                rootcomparator);
+            //comparator);
         
         // seed the branch with existing tags
         on_tags_added_removed(Tag.global.get_all(), null);
@@ -42,6 +43,23 @@ public class Tags.Branch : Sidebar.Branch {
         return Tag.compare_names(((Tags.SidebarEntry) a).for_tag(),
             ((Tags.SidebarEntry) b).for_tag());
     }
+
+    private static int rootcomparator(Sidebar.Entry a, Sidebar.Entry b) {
+        if (a==b)
+            return 0;
+        return 1;
+    }
+
+
+    private static int TagCntComparator(Tag a, Tag b) {
+        if (a == b)
+            return 0;
+        int acnt=a.get_sources_count();
+        int bcnt=b.get_sources_count();
+        //message("TagCNTComparator %d %s %s",acnt-bcnt,a.to_string(),b.to_string());
+        return -1*(acnt - bcnt);
+    }
+
     
     private void on_tags_added_removed(Gee.Iterable<DataObject>? added_raw, Gee.Iterable<DataObject>? removed) {
         // Store the tag whose page we'll eventually want to go to,
@@ -59,8 +77,18 @@ public class Tags.Branch : Sidebar.Branch {
                 Tag tag = (Tag) object;
                 added.add(tag);
             }
+
+            // added to sort by Tag Count
+            Gee.ArrayList<Tag> added_cnt = new Gee.ArrayList<Tag>();
+            foreach (Tag obj in added) {
+                added_cnt.add(obj);
+            }
+            added_cnt.sort(TagCntComparator);
+            //foreach (Tag obj in added_cnt) {
+            //    message("added_cnt: %s",obj.to_string());
+            //}
                             
-            foreach (Tag tag in added) {
+            foreach (Tag tag in added_cnt) {
                 // ensure that all parent tags of this tag (if any) already have sidebar
                 // entries
                 Tag? parent_tag = tag.get_hierarchical_parent();
