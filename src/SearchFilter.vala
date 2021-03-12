@@ -1098,6 +1098,8 @@ public class SearchFilterToolbar : Gtk.Revealer {
         close_item.show();
         close_item.activate.connect(on_context_menu_close_chosen);
         close_menu.append(close_item);
+        // Search box.
+        toolbar.insert(search_box, -1);
        
         // Type label and toggles
         label_type = new LabelToolItem(_("Type"), 10, 5);
@@ -1117,13 +1119,13 @@ public class SearchFilterToolbar : Gtk.Revealer {
         toolbar.insert(toolbtn_raw, -1);
         
         // separator
-        sepr_mediatype_flagged = new Gtk.SeparatorToolItem();
-        toolbar.insert(sepr_mediatype_flagged, -1);
+        //sepr_mediatype_flagged = new Gtk.SeparatorToolItem();
+        //toolbar.insert(sepr_mediatype_flagged, -1);
         
         // Flagged button
         
         toolbtn_flag = new ToggleActionToolButton("win.display.flagged");
-        toolbtn_flag.set_label(_("Flagged"));
+        toolbtn_flag.set_label(_("")); //"Flagged"
         toolbtn_flag.set_tooltip_text(_("Flagged"));
         
         toolbar.insert(toolbtn_flag, -1);
@@ -1136,15 +1138,15 @@ public class SearchFilterToolbar : Gtk.Revealer {
         var model = this.builder.get_object ("popup-menu") as GLib.MenuModel;
         rating_button = new RatingFilterButton (model);
         rating_button.set_label(_("Rating"));
-        rating_button.set_expand(false);
+        rating_button.set_expand(true);
         toolbar.insert(rating_button, -1);
         
         // separator
-        sepr_rating_saved = new Gtk.SeparatorToolItem();
-        toolbar.insert(sepr_rating_saved, -1);
+        //sepr_rating_saved = new Gtk.SeparatorToolItem();
+        //toolbar.insert(sepr_rating_saved, -1);
 
         // Saved search button
-        saved_search_button.set_expand(false);
+        saved_search_button.set_expand(true);
 		saved_search_button.set_label(_("Saved Search"));
         saved_search_button.set_tooltip_text(_("Use a saved search to filter items in the current view"));
         saved_search_button.clicked.connect(on_saved_search_button_clicked);
@@ -1152,12 +1154,12 @@ public class SearchFilterToolbar : Gtk.Revealer {
 
         // Separator to right-align the text box
         Gtk.SeparatorToolItem separator_align = new Gtk.SeparatorToolItem();
-        separator_align.set_expand(true);
-        separator_align.set_draw(false);
+        //separator_align.set_expand(true);
+        //separator_align.set_expand(false);
+        //separator_align.set_draw(false);
         toolbar.insert(separator_align, -1);
         
-        // Search box.
-        toolbar.insert(search_box, -1);
+        
 
         add(toolbar);
         
