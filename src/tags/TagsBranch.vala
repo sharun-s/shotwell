@@ -209,7 +209,7 @@ public class Tags.SidebarEntry : Sidebar.SimplePageEntry, Sidebar.RenameableEntr
     }
     
     public override string? get_sidebar_icon() {
-        return single_tag_icon;
+        return tag.get_sources_count().to_string();//single_tag_icon;
     }
     
     protected override Page create_page() {

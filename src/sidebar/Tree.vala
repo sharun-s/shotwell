@@ -772,6 +772,20 @@ public class Sidebar.Tree : Gtk.TreeView {
         destroying_page(entry, page);
     }
     
+    public Gdk.Pixbuf drawtext_on_icon(string text,int x,int y){
+        var surface = new Cairo.ImageSurface(Cairo.Format.ARGB32, 32, 32);
+        var context = new Cairo.Context(surface);
+        context.set_source_rgba(0.7,0.7,0.7,1);
+        
+        context.select_font_face("Sans", Cairo.FontSlant.NORMAL, Cairo.FontWeight.NORMAL);
+        context.set_font_size(26);
+        context.move_to(x, y);
+        context.show_text(text);
+	return Gdk.pixbuf_get_from_surface(surface, 0, 0, surface.get_width(), surface.get_height());
+    }
+    
+
+
     private void load_entry_icons(Gtk.TreeIter iter) {
         EntryWrapper? wrapper = get_wrapper_at_iter(iter);
         Icon? icon = null;
@@ -781,7 +795,13 @@ public class Sidebar.Tree : Gtk.TreeView {
         try {
             string? name = wrapper.entry.get_sidebar_icon();
             if (name != null) {
-                icon = Icon.new_for_string (name);
+                int tmp = int.parse(name);
+                if (tmp > 0){
+                    icon=drawtext_on_icon(name, 1, 24);
+                }else{
+                    //message("%s named icon",name);
+                    icon = Icon.new_for_string (name);
+                }
             }
         } catch (Error e) { }
 
