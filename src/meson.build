@@ -37,7 +37,7 @@ endif
 
 shotwell_deps = [gio, gee, sqlite, gtk, sqlite, posix, gphoto2,
                  gstreamer_pbu, gio_unix, gudev, gexiv2, gmodule, unity,
-                 libraw, libexif, sw_plugin, webpdemux, webp, version,
+                 libraw, libexif, sw_plugin, version,
                  clutter, clutter_gtk, champlain, champlain_gtk]
 
 subdir('metadata')
@@ -90,7 +90,7 @@ executable(
         'photos/RawSupport.vala',
         'photos/PngSupport.vala',
         'photos/TiffSupport.vala',
-        'photos/WebPSupport.vala',
+        #'photos/WebPSupport.vala',
         'plugins/Plugins.vala',
         'plugins/StandardHostInterface.vala',
         'plugins/ManifestWidget.vala',

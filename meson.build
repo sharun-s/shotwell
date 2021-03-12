@@ -70,8 +70,8 @@ champlain_gtk = dependency('champlain-gtk-0.12')
 clutter = dependency('clutter-1.0')
 clutter_gtk = dependency('clutter-gtk-1.0')
  
-webpdemux = dependency('libwebpdemux')
-webp = dependency('libwebp')
+#webpdemux = dependency('libwebpdemux')
+#webp = dependency('libwebp')
 
 if unity.found() and get_option('unity_support')
   add_global_arguments(['--define=UNITY_SUPPORT'], language : 'vala')
@@ -113,7 +113,7 @@ if get_option('face_detection')
 endif
 
 json_glib = dependency('json-glib-1.0')
-gdata = dependency('libgdata')
+#gdata = dependency('libgdata')
 gcr = dependency('gcr-3')
 gcr_ui = dependency('gcr-ui-3')
 cairo = dependency('cairo')
@@ -125,7 +125,7 @@ subdir('data')
 subdir('src')
 subdir('plugins')
 subdir('po')
-subdir('help')
+#subdir('help')
 subdir('thumbnailer')
 subdir('test')
 
