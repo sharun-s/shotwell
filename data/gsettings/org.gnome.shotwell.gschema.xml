@@ -211,6 +211,18 @@
         <summary>Show title</summary>
         <description>Whether to show the title of a photo during the slideshow</description>
     </key>
+
+    <key name="show-time" type="b">
+        <default>false</default>
+        <summary>Show time</summary>
+        <description>Whether to show the creation time of a photo during the slideshow</description>
+    </key>
+    
+    <key name="show-tags" type="b">
+        <default>false</default>
+        <summary>Show tags</summary>
+        <description>Whether to show the tags of a photo during the slideshow</description>
+    </key>
 </schema>
 
 <schema id="org.gnome.shotwell.preferences.window">

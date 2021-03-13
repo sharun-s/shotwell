@@ -89,6 +89,8 @@ public enum ConfigurableProperty {
     SLIDESHOW_TRANSITION_DELAY,
     SLIDESHOW_TRANSITION_EFFECT_ID,
     SLIDESHOW_SHOW_TITLE,
+    SLIDESHOW_SHOW_TIME,
+    SLIDESHOW_SHOW_TAGS,
     USE_24_HOUR_TIME,
     USE_LOWERCASE_FILENAMES,
     VIDEO_INTERPRETER_STATE_COOKIE,
@@ -304,7 +306,13 @@ public enum ConfigurableProperty {
             
             case SLIDESHOW_SHOW_TITLE:
                 return "SLIDESHOW_SHOW_TITLE";
-                
+
+            case SLIDESHOW_SHOW_TAGS:
+                return "SLIDESHOW_SHOW_TAGS";
+            
+            case SLIDESHOW_SHOW_TIME:
+                return "SLIDESHOW_SHOW_TIME";
+            
             case USE_24_HOUR_TIME:
                 return "USE_24_HOUR_TIME";
                 
@@ -373,7 +381,7 @@ public abstract class ConfigurationFacade : Object {
     }
 
     private void on_property_changed(ConfigurableProperty p) {
-        debug ("ConfigurationFacade: engine reports property '%s' changed.", p.to_string());
+        //debug ("ConfigurationFacade: engine reports property '%s' changed.", p.to_string());
 
         switch (p) {
             case ConfigurableProperty.AUTO_IMPORT_FROM_LIBRARY:
@@ -1773,10 +1781,46 @@ public abstract class ConfigurationFacade : Object {
             return false;
         }
     }
+
+    public virtual bool get_slideshow_show_time() {
+        try {
+            return get_engine().get_bool_property(ConfigurableProperty.SLIDESHOW_SHOW_TIME);
+        } catch (ConfigurationError err) {
+            on_configuration_error(err);
+
+            return false;
+        }
+    }
+
+    public virtual bool get_slideshow_show_tags() {
+        try {
+            return get_engine().get_bool_property(ConfigurableProperty.SLIDESHOW_SHOW_TAGS);
+        } catch (ConfigurationError err) {
+            on_configuration_error(err);
+
+            return false;
+        }
+    }
     
     public virtual void set_slideshow_show_title(bool show_title) {
         try {
             get_engine().set_bool_property(ConfigurableProperty.SLIDESHOW_SHOW_TITLE, show_title);
+        } catch (ConfigurationError err) {
+            on_configuration_error(err);
+        }
+    }
+
+    public virtual void set_slideshow_show_time(bool show_time) {
+        try {
+            get_engine().set_bool_property(ConfigurableProperty.SLIDESHOW_SHOW_TIME, show_time);
+        } catch (ConfigurationError err) {
+            on_configuration_error(err);
+        }
+    }
+
+    public virtual void set_slideshow_show_tags(bool show_tags) {
+        try {
+            get_engine().set_bool_property(ConfigurableProperty.SLIDESHOW_SHOW_TAGS, show_tags);
         } catch (ConfigurationError err) {
             on_configuration_error(err);
         }

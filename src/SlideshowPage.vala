@@ -39,6 +39,11 @@ class SlideshowPage : SinglePhotoPage {
         unowned Gtk.Adjustment transition_effect_adjustment;
         [GtkChild]
         unowned Gtk.CheckButton show_title_button;
+        [GtkChild]
+        unowned Gtk.CheckButton show_time_button;
+        [GtkChild]
+        unowned Gtk.CheckButton show_tags_button;
+
         
         public SettingsDialog() {
             Object (use_header_bar: Resources.use_header_bar());
@@ -77,6 +82,12 @@ class SlideshowPage : SinglePhotoPage {
             
             bool show_title = Config.Facade.get_instance().get_slideshow_show_title();
             show_title_button.active = show_title;
+
+            bool show_time = Config.Facade.get_instance().get_slideshow_show_time();
+            show_time_button.active = show_time;
+
+            bool show_tags = Config.Facade.get_instance().get_slideshow_show_tags();
+            show_tags_button.active = show_tags;
             
             on_transition_changed();
         }
@@ -110,6 +121,14 @@ class SlideshowPage : SinglePhotoPage {
         
         public bool get_show_title() {
             return show_title_button.active;
+        }
+
+        public bool get_show_time() {
+            return show_time_button.active;
+        }
+
+        public bool get_show_tags() {
+            return show_tags_button.active;
         }
     }
 
@@ -377,7 +396,8 @@ class SlideshowPage : SinglePhotoPage {
             Config.Facade.get_instance().set_slideshow_transition_delay(settings_dialog.get_transition_delay());
             Config.Facade.get_instance().set_slideshow_transition_effect_id(settings_dialog.get_transition_effect_id());
             Config.Facade.get_instance().set_slideshow_show_title(settings_dialog.get_show_title());
-            
+            Config.Facade.get_instance().set_slideshow_show_tags(settings_dialog.get_show_tags());
+            Config.Facade.get_instance().set_slideshow_show_time(settings_dialog.get_show_time());
             update_transition_effect();
         }
         
@@ -402,6 +422,53 @@ class SlideshowPage : SinglePhotoPage {
             effect_id = transitions[random];
         }
         set_transition(effect_id, (int) (effect_delay * 1000.0));
+    }
+
+    private void paint_tags(Cairo.Context ctx, Dimensions ctx_dim){
+        Gee.List<Tag>? tags = Tag.global.fetch_for_source(current);
+        StringBuilder builder = new StringBuilder("");
+        //int i = 0;
+        bool first = true;
+        foreach(Tag tag in tags) {
+            string tag_name = tag.get_user_visible_name();
+            //string esc_tag_name = guarded_markup_escape_text(tag_name);
+            if (first)
+                first = false;
+            else
+                builder.append(",");//TAG_LIST_SEPARATOR_STRING);
+            builder.append(tag_name);
+            //++i;
+        }
+
+        string built = builder.str;
+
+        Pango.Layout layout = create_pango_layout(built);
+        Pango.AttrList list = new Pango.AttrList();
+        Pango.Attribute size = Pango.attr_scale_new(3);
+        list.insert(size.copy());
+        layout.set_attributes(list);
+        layout.set_width((int) ((ctx_dim.width * 0.9) * Pango.SCALE));
+        
+        // Find the right position
+        int title_width, title_height;
+        layout.get_pixel_size(out title_width, out title_height);
+        double x = ctx_dim.width * 0.0;
+        double y = ctx_dim.height * 0.8;
+        
+        // Move the title up if it is too high
+        if (y + title_height >= ctx_dim.height * 0.9)
+            y = ctx_dim.height * 0.9 - title_height;
+        // Move to the left if the title is too long
+        if (x + title_width >= ctx_dim.width * 0.9)
+            x = ctx_dim.width / 2 - title_width / 2;
+        
+        set_source_color_from_string(ctx, "#fff");
+        ctx.move_to(x, y);
+        Pango.cairo_show_layout(ctx, layout);
+        Pango.cairo_layout_path(ctx, layout);
+        //ctx.set_line_width(1.5);
+        //set_source_color_from_string(ctx, "#000");
+        ctx.stroke();
     }
     
     // Paint the title of the photo
@@ -441,11 +508,56 @@ class SlideshowPage : SinglePhotoPage {
         ctx.stroke();
     }
     
+    private void paint_time(Cairo.Context ctx, Dimensions ctx_dim) {
+        Time test=Time.local(current.get_exposure_time());
+
+        string timestring = test.format(Resources.get_hh_mm_format_string());
+        
+        if (timestring[0] == '0')
+            timestring = timestring.substring(1, -6);
+        
+        // If the photo doesn't have a time, don't paint anything
+        if (timestring == null || timestring == "")
+            return;
+        
+        Pango.Layout layout = create_pango_layout(timestring);
+        Pango.AttrList list = new Pango.AttrList();
+        Pango.Attribute size = Pango.attr_scale_new(3);
+        list.insert(size.copy());
+        layout.set_attributes(list);
+        layout.set_height((int) ((ctx_dim.width * 0.9) * Pango.SCALE));
+        
+        // Find the right position
+        int title_width, title_height;
+        layout.get_pixel_size(out title_width, out title_height);
+        double x = ctx_dim.width * 0.0;
+        double y = ctx_dim.height * 0.70;
+        
+        // Move the title up if it is too high
+        if (y + title_height >= ctx_dim.height * 0.95)
+            y = ctx_dim.height * 0.95 - title_height;
+        // Move to the left if the title is too long
+        if (x + title_width >= ctx_dim.width * 0.95)
+            x = ctx_dim.width / 2 - title_width / 2;
+        
+        set_source_color_from_string(ctx, "#ccf");
+        ctx.move_to(x, y);
+        Pango.cairo_show_layout(ctx, layout);
+        Pango.cairo_layout_path(ctx, layout);
+        //ctx.set_line_width(1);
+        set_source_color_from_string(ctx, "#000");
+        ctx.stroke();
+    }
+
     public override void paint(Cairo.Context ctx, Dimensions ctx_dim) {
        base.paint(ctx, ctx_dim);
         
         if (Config.Facade.get_instance().get_slideshow_show_title() && !is_transition_in_progress())
             paint_title(ctx, ctx_dim);
+        if (Config.Facade.get_instance().get_slideshow_show_time() && !is_transition_in_progress())
+            paint_time(ctx, ctx_dim);
+        if (Config.Facade.get_instance().get_slideshow_show_tags() && !is_transition_in_progress())
+            paint_tags(ctx, ctx_dim);
     }
 }
 
