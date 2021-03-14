@@ -426,8 +426,7 @@ class SlideshowPage : SinglePhotoPage {
 
     private void paint_tags(Cairo.Context ctx, Dimensions ctx_dim){
         Gee.List<Tag>? tags = Tag.global.fetch_for_source(current);
-        StringBuilder builder = new StringBuilder("");
-        //int i = 0;
+        StringBuilder tagstrbuilder = new StringBuilder("");
         bool first = true;
         foreach(Tag tag in tags) {
             string tag_name = tag.get_user_visible_name();
@@ -435,40 +434,10 @@ class SlideshowPage : SinglePhotoPage {
             if (first)
                 first = false;
             else
-                builder.append(",");//TAG_LIST_SEPARATOR_STRING);
-            builder.append(tag_name);
-            //++i;
+                tagstrbuilder.append(", ");//TAG_LIST_SEPARATOR_STRING);
+            tagstrbuilder.append(tag_name);
         }
-
-        string built = builder.str;
-
-        Pango.Layout layout = create_pango_layout(built);
-        Pango.AttrList list = new Pango.AttrList();
-        Pango.Attribute size = Pango.attr_scale_new(3);
-        list.insert(size.copy());
-        layout.set_attributes(list);
-        layout.set_width((int) ((ctx_dim.width * 0.9) * Pango.SCALE));
-        
-        // Find the right position
-        int title_width, title_height;
-        layout.get_pixel_size(out title_width, out title_height);
-        double x = ctx_dim.width * 0.0;
-        double y = ctx_dim.height * 0.8;
-        
-        // Move the title up if it is too high
-        if (y + title_height >= ctx_dim.height * 0.9)
-            y = ctx_dim.height * 0.9 - title_height;
-        // Move to the left if the title is too long
-        if (x + title_width >= ctx_dim.width * 0.9)
-            x = ctx_dim.width / 2 - title_width / 2;
-        
-        set_source_color_from_string(ctx, "#fff");
-        ctx.move_to(x, y);
-        Pango.cairo_show_layout(ctx, layout);
-        Pango.cairo_layout_path(ctx, layout);
-        //ctx.set_line_width(1.5);
-        //set_source_color_from_string(ctx, "#000");
-        ctx.stroke();
+        draw_text(ctx, ctx_dim, tagstrbuilder.str, 2, 0.1, 0.85, "#fff", "#000");
     }
     
     // Paint the title of the photo
@@ -478,51 +447,26 @@ class SlideshowPage : SinglePhotoPage {
         // If the photo doesn't have a title, don't paint anything
         if (title == null || title == "")
             return;
-        
-        Pango.Layout layout = create_pango_layout(title);
-        Pango.AttrList list = new Pango.AttrList();
-        Pango.Attribute size = Pango.attr_scale_new(3);
-        list.insert(size.copy());
-        layout.set_attributes(list);
-        layout.set_width((int) ((ctx_dim.width * 0.9) * Pango.SCALE));
-        
-        // Find the right position
-        int title_width, title_height;
-        layout.get_pixel_size(out title_width, out title_height);
-        double x = ctx_dim.width * 0.2;
-        double y = ctx_dim.height * 0.90;
-        
-        // Move the title up if it is too high
-        if (y + title_height >= ctx_dim.height * 0.95)
-            y = ctx_dim.height * 0.95 - title_height;
-        // Move to the left if the title is too long
-        if (x + title_width >= ctx_dim.width * 0.95)
-            x = ctx_dim.width / 2 - title_width / 2;
-        
-        set_source_color_from_string(ctx, "#fff");
-        ctx.move_to(x, y);
-        Pango.cairo_show_layout(ctx, layout);
-        Pango.cairo_layout_path(ctx, layout);
-        ctx.set_line_width(1.5);
-        set_source_color_from_string(ctx, "#000");
-        ctx.stroke();
+        draw_text(ctx, ctx_dim, title, 2, 0.1, 0.9, "#fff", "#000");
     }
     
     private void paint_time(Cairo.Context ctx, Dimensions ctx_dim) {
         Time test=Time.local(current.get_exposure_time());
 
         string timestring = test.format(Resources.get_hh_mm_format_string());
-        
         if (timestring[0] == '0')
-            timestring = timestring.substring(1, -6);
+            timestring = timestring.substring(1, -1);
         
         // If the photo doesn't have a time, don't paint anything
         if (timestring == null || timestring == "")
             return;
-        
-        Pango.Layout layout = create_pango_layout(timestring);
+        draw_text(ctx, ctx_dim, timestring, 2, 0.1, 0.8, "#fff", "#000");
+    }
+ 
+    private void draw_text(Cairo.Context ctx, Dimensions ctx_dim, string text, double fontscale, double xperc, double yperc, string fontcolor, string bordercolor){
+        Pango.Layout layout = create_pango_layout(text);
         Pango.AttrList list = new Pango.AttrList();
-        Pango.Attribute size = Pango.attr_scale_new(3);
+        Pango.Attribute size = Pango.attr_scale_new(fontscale);
         list.insert(size.copy());
         layout.set_attributes(list);
         layout.set_height((int) ((ctx_dim.width * 0.9) * Pango.SCALE));
@@ -530,8 +474,8 @@ class SlideshowPage : SinglePhotoPage {
         // Find the right position
         int title_width, title_height;
         layout.get_pixel_size(out title_width, out title_height);
-        double x = ctx_dim.width * 0.0;
-        double y = ctx_dim.height * 0.70;
+        double x = ctx_dim.width * xperc;
+        double y = ctx_dim.height * yperc;
         
         // Move the title up if it is too high
         if (y + title_height >= ctx_dim.height * 0.95)
@@ -540,12 +484,12 @@ class SlideshowPage : SinglePhotoPage {
         if (x + title_width >= ctx_dim.width * 0.95)
             x = ctx_dim.width / 2 - title_width / 2;
         
-        set_source_color_from_string(ctx, "#ccf");
+        set_source_color_from_string(ctx, fontcolor);
         ctx.move_to(x, y);
         Pango.cairo_show_layout(ctx, layout);
         Pango.cairo_layout_path(ctx, layout);
-        //ctx.set_line_width(1);
-        set_source_color_from_string(ctx, "#000");
+        ctx.set_line_width(1);
+        set_source_color_from_string(ctx, bordercolor);
         ctx.stroke();
     }
 
