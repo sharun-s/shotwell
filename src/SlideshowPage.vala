@@ -453,14 +453,16 @@ class SlideshowPage : SinglePhotoPage {
     private void paint_time(Cairo.Context ctx, Dimensions ctx_dim) {
         Time test=Time.local(current.get_exposure_time());
 
-        string timestring = test.format(Resources.get_hh_mm_format_string());
+        string timestring = test.format("%k:%M %p");//Resources.get_hh_mm_format_string());
+        string daystring = test.format(Resources.get_long_date_format_string());
+        
         if (timestring[0] == '0')
             timestring = timestring.substring(1, -1);
         
         // If the photo doesn't have a time, don't paint anything
         if (timestring == null || timestring == "")
             return;
-        draw_text(ctx, ctx_dim, timestring, 2, 0.1, 0.8, "#fff", "#000");
+        draw_text(ctx, ctx_dim, @"$daystring\n$timestring", 2, 0.1, 0.75, "#fff", "#000");
     }
  
     private void draw_text(Cairo.Context ctx, Dimensions ctx_dim, string text, double fontscale, double xperc, double yperc, string fontcolor, string bordercolor){
