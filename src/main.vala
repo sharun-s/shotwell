@@ -230,6 +230,124 @@ void library_exec(string[] mounts) {
 
     Library.app_terminate();
 }
+private SlideshowPage ssp;
+
+
+void slideshow_exec(string tagname) {
+    was_already_running = Application.get_is_remote();
+    
+    if (was_already_running) {
+        message("Already running...no idea what this is..unknown how starting slideshow separately will effect things so exiting");
+        return;
+    }
+    
+    // preconfigure units
+    Db.preconfigure(AppDirs.get_data_subdir("data").get_child("photo.db"));
+    
+    // initialize units
+    try {
+        Library.app_init();
+    } catch (Error err) {
+        AppWindow.panic(err.message);
+        return;
+    }
+    
+    // validate the databases prior to using them
+    message("Verifying database…");
+    string errormsg = null;
+    string app_version;
+    int schema_version;
+    Db.VerifyResult result = Db.verify_database(out app_version, out schema_version);
+    switch (result) {
+        case Db.VerifyResult.OK:
+            // do nothing; no problems
+        break;
+        
+        case Db.VerifyResult.FUTURE_VERSION:
+            errormsg = _("Your photo library is not compatible with this version of Shotwell. It appears it was created by Shotwell %s (schema %d). This version is %s (schema %d). Please use the latest version of Shotwell.").printf(
+                app_version, schema_version, Resources.APP_VERSION, DatabaseTable.SCHEMA_VERSION);
+        break;
+        
+        case Db.VerifyResult.UPGRADE_ERROR:
+            errormsg = _("Shotwell was unable to upgrade your photo library from version %s (schema %d) to %s (schema %d). For more information please check the Shotwell Wiki at %s").printf(
+                app_version, schema_version, Resources.APP_VERSION, DatabaseTable.SCHEMA_VERSION,
+                Resources.HOME_URL);
+        break;
+        
+        case Db.VerifyResult.NO_UPGRADE_AVAILABLE:
+            errormsg = _("Your photo library is not compatible with this version of Shotwell. It appears it was created by Shotwell %s (schema %d). This version is %s (schema %d). Please clear your library by deleting %s and re-import your photos.").printf(
+                app_version, schema_version, Resources.APP_VERSION, DatabaseTable.SCHEMA_VERSION,
+                AppDirs.get_data_dir().get_path());
+        break;
+        
+        default:
+            errormsg = _("Unknown error attempting to verify Shotwell’s database: %s").printf(
+                result.to_string());
+        break;
+    }
+
+    // Need to set this before anything else, but _after_ setting the profile
+    var use_dark = Config.Facade.get_instance().get_gtk_theme_variant();
+    Gtk.Settings.get_default().gtk_application_prefer_dark_theme = use_dark;
+    
+    if (errormsg != null) {
+        Gtk.MessageDialog dialog = new Gtk.MessageDialog(null, Gtk.DialogFlags.MODAL, 
+            Gtk.MessageType.ERROR, Gtk.ButtonsType.OK, "%s", errormsg);
+        dialog.title = Resources.APP_TITLE;
+        dialog.run();
+        dialog.destroy();
+        
+        DatabaseTable.terminate();
+        
+        return;
+    }
+    
+    Upgrades.init();
+    
+//     ProgressDialog progress_dialog = null;
+//     AggregateProgressMonitor aggregate_monitor = null;
+     ProgressMonitor monitor = null;
+    
+    ThumbnailCache.init();
+    Tombstone.init();
+    LibraryFiles.select_copy_function();
+    LibraryPhoto.init(monitor);
+    Video.init(monitor);
+    Upgrades.get_instance().execute();
+    
+    MediaCollectionRegistry.init();
+    MediaCollectionRegistry registry = MediaCollectionRegistry.get_instance();
+    registry.register_collection(LibraryPhoto.global);
+    message("initialize Tags");
+    Tag.init(null);
+    Application.get_instance().init_done();
+    
+    message("App init done...");
+    Tag x = Tag.global.fetch_by_name(tagname);
+        
+    TagPage p = new TagPage(x); 
+    Thumbnail thumbnail = (Thumbnail) p.get_view().get_first();
+    message("created Thumbnail");
+    LibraryPhoto? photo = thumbnail.get_media_source() as LibraryPhoto;
+    // if (photo == null)
+    //     return;
+    //
+    ssp = new SlideshowPage(LibraryPhoto.global, p.get_view(), photo);
+    FullscreenWindow fsw = new FullscreenWindow(ssp);
+    
+    debug("%lf seconds to Gtk.main()", startup_timer.elapsed());
+    
+    //Application.get_instance().start();
+    Application.get_instance().start_show(fsw);
+    
+    Tag.terminate();
+    LibraryPhoto.terminate();
+    MediaCollectionRegistry.terminate();
+    Tombstone.terminate();
+    ThumbnailCache.terminate();
+    Video.terminate();
+    Library.app_terminate();
+}
 
 private bool do_system_pictures_import = false;
 private bool do_external_import = false;
@@ -342,6 +460,7 @@ bool fullscreen = false;
 bool show_metadata = false;
 string? profile = null;
 bool list_profiles = false;
+string? tag = null;
 
 const OptionEntry[] entries = {
     { "datadir", 'd', 0, OptionArg.FILENAME, ref data_dir, N_("Path to Shotwell’s private data"), N_("DIRECTORY") },
@@ -352,6 +471,7 @@ const OptionEntry[] entries = {
     { "show-metadata", 'p', 0, OptionArg.NONE, ref show_metadata, N_("Print the metadata of the image file"), null },
     { "profile", 'i', 0, OptionArg.STRING, ref profile, N_("Name for a custom profile"), N_("PROFILE") },
     { "list-profiles", 'l', 0, OptionArg.NONE, ref list_profiles, N_("Show available profiles"), null },
+    { "tag-slideshow", 't', 0, OptionArg.STRING, ref tag, N_("Start Slideshow of only Photos with given Tag"), N_("TAG") },
     { null, 0, 0, 0, null, null, null }
 };
 }
@@ -484,14 +604,16 @@ void main(string[] args) {
     // in both the case of running as the library or an editor, Resources is always
     // initialized
     Resources.init();
-    
-    // since it's possible for a mount name to be passed that's not supported (and hence an empty
-    // mount list), or for nothing to be on the command-line at all, only go to direct editing if a
-    // filename is spec'd
-    if (is_string_empty(filename))
-        library_exec(mounts);
+    if(CommandlineOptions.tag != null)
+        slideshow_exec(CommandlineOptions.tag);
     else
-        editing_exec(filename, CommandlineOptions.fullscreen);
+        // since it's possible for a mount name to be passed that's not supported (and hence an empty
+        // mount list), or for nothing to be on the command-line at all, only go to direct editing if a
+        // filename is spec'd
+        if (is_string_empty(filename))
+            library_exec(mounts);
+        else
+            editing_exec(filename, CommandlineOptions.fullscreen);
     
     // terminate mode-inspecific modules
     Resources.terminate();

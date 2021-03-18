@@ -149,8 +149,14 @@ public class FullscreenWindow : PageWindow {
     private void on_close() {
         Config.Facade.get_instance().set_pin_toolbar_state(is_toolbar_dismissal_enabled);
         hide_toolbar();
+        if (AppWindow.get_instance()==null){
+            //slide show started from commandline
+            this.destroy();
+        }else{
+            //slide show started from app window 
+            AppWindow.get_instance().end_fullscreen();    
+        }
         
-        AppWindow.get_instance().end_fullscreen();
     }
     
     public new void close() {
@@ -650,7 +656,6 @@ public abstract class AppWindow : PageWindow {
         // if already fullscreen, use that
         if (fullscreen_window != null) {
             fullscreen_window.present();
-            
             return;
         }
 

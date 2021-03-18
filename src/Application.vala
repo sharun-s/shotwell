@@ -191,6 +191,29 @@ public class Application {
         running = false;
     }
 
+    public void start_show(FullscreenWindow fsw){//string[]? argv = null) {
+        if (running)
+            return;
+
+        running = true;
+
+        starting();
+
+        assert(fsw != null);
+        system_app.add_window(fsw);//AppWindow.get_instance());
+        system_app_run_retval = system_app.run();//argv);
+
+        if (!direct) {
+            system_app.command_line.disconnect(on_command_line);
+        }
+
+        system_app.activate.disconnect(on_activated);
+        system_app.startup.disconnect(on_activated);
+
+        running = false;
+    }
+
+
     public void exit() {
         // only fire this once, but thanks to terminate(), it will be fired at least once (even
         // if start() is not called and "starting" is not fired)
