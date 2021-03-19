@@ -253,59 +253,54 @@ void slideshow_exec(string tagname) {
     }
     
     // validate the databases prior to using them
-    message("Verifying database…");
-    string errormsg = null;
-    string app_version;
-    int schema_version;
-    Db.VerifyResult result = Db.verify_database(out app_version, out schema_version);
-    switch (result) {
-        case Db.VerifyResult.OK:
-            // do nothing; no problems
-        break;
+    // message("Verifying database…");
+    // string errormsg = null;
+    // string app_version;
+    // int schema_version;
+    // Db.VerifyResult result = Db.verify_database(out app_version, out schema_version);
+    // switch (result) {
+    //     case Db.VerifyResult.OK:
+    //         // do nothing; no problems
+    //     break;
         
-        case Db.VerifyResult.FUTURE_VERSION:
-            errormsg = _("Your photo library is not compatible with this version of Shotwell. It appears it was created by Shotwell %s (schema %d). This version is %s (schema %d). Please use the latest version of Shotwell.").printf(
-                app_version, schema_version, Resources.APP_VERSION, DatabaseTable.SCHEMA_VERSION);
-        break;
+    //     case Db.VerifyResult.FUTURE_VERSION:
+    //         errormsg = _("Your photo library is not compatible with this version of Shotwell. It appears it was created by Shotwell %s (schema %d). This version is %s (schema %d). Please use the latest version of Shotwell.").printf(
+    //             app_version, schema_version, Resources.APP_VERSION, DatabaseTable.SCHEMA_VERSION);
+    //     break;
         
-        case Db.VerifyResult.UPGRADE_ERROR:
-            errormsg = _("Shotwell was unable to upgrade your photo library from version %s (schema %d) to %s (schema %d). For more information please check the Shotwell Wiki at %s").printf(
-                app_version, schema_version, Resources.APP_VERSION, DatabaseTable.SCHEMA_VERSION,
-                Resources.HOME_URL);
-        break;
+    //     case Db.VerifyResult.UPGRADE_ERROR:
+    //         errormsg = _("Shotwell was unable to upgrade your photo library from version %s (schema %d) to %s (schema %d). For more information please check the Shotwell Wiki at %s").printf(
+    //             app_version, schema_version, Resources.APP_VERSION, DatabaseTable.SCHEMA_VERSION,
+    //             Resources.HOME_URL);
+    //     break;
         
-        case Db.VerifyResult.NO_UPGRADE_AVAILABLE:
-            errormsg = _("Your photo library is not compatible with this version of Shotwell. It appears it was created by Shotwell %s (schema %d). This version is %s (schema %d). Please clear your library by deleting %s and re-import your photos.").printf(
-                app_version, schema_version, Resources.APP_VERSION, DatabaseTable.SCHEMA_VERSION,
-                AppDirs.get_data_dir().get_path());
-        break;
+    //     case Db.VerifyResult.NO_UPGRADE_AVAILABLE:
+    //         errormsg = _("Your photo library is not compatible with this version of Shotwell. It appears it was created by Shotwell %s (schema %d). This version is %s (schema %d). Please clear your library by deleting %s and re-import your photos.").printf(
+    //             app_version, schema_version, Resources.APP_VERSION, DatabaseTable.SCHEMA_VERSION,
+    //             AppDirs.get_data_dir().get_path());
+    //     break;
         
-        default:
-            errormsg = _("Unknown error attempting to verify Shotwell’s database: %s").printf(
-                result.to_string());
-        break;
-    }
+    //     default:
+    //         errormsg = _("Unknown error attempting to verify Shotwell’s database: %s").printf(
+    //             result.to_string());
+    //     break;
+    // }
 
-    // Need to set this before anything else, but _after_ setting the profile
-    var use_dark = Config.Facade.get_instance().get_gtk_theme_variant();
-    Gtk.Settings.get_default().gtk_application_prefer_dark_theme = use_dark;
+    // // Need to set this before anything else, but _after_ setting the profile
+    // //var use_dark = Config.Facade.get_instance().get_gtk_theme_variant();
+    // //Gtk.Settings.get_default().gtk_application_prefer_dark_theme = use_dark;
     
-    if (errormsg != null) {
-        Gtk.MessageDialog dialog = new Gtk.MessageDialog(null, Gtk.DialogFlags.MODAL, 
-            Gtk.MessageType.ERROR, Gtk.ButtonsType.OK, "%s", errormsg);
-        dialog.title = Resources.APP_TITLE;
-        dialog.run();
-        dialog.destroy();
+    // if (errormsg != null) {
+    //     Gtk.MessageDialog dialog = new Gtk.MessageDialog(null, Gtk.DialogFlags.MODAL, 
+    //         Gtk.MessageType.ERROR, Gtk.ButtonsType.OK, "%s", errormsg);
+    //     dialog.title = Resources.APP_TITLE;
+    //     dialog.run();
+    //     dialog.destroy();
         
-        DatabaseTable.terminate();
+    //     DatabaseTable.terminate();
         
-        return;
-    }
-    
-    Upgrades.init();
-    
-//     ProgressDialog progress_dialog = null;
-//     AggregateProgressMonitor aggregate_monitor = null;
+    //     return;
+    // }
      ProgressMonitor monitor = null;
     
     ThumbnailCache.init();
@@ -313,7 +308,7 @@ void slideshow_exec(string tagname) {
     LibraryFiles.select_copy_function();
     LibraryPhoto.init(monitor);
     Video.init(monitor);
-    Upgrades.get_instance().execute();
+    //Upgrades.get_instance().execute();
     
     MediaCollectionRegistry.init();
     MediaCollectionRegistry registry = MediaCollectionRegistry.get_instance();
@@ -324,23 +319,22 @@ void slideshow_exec(string tagname) {
     
     message("App init done...");
     Tag x = Tag.global.fetch_by_name(tagname);
-        
-    TagPage p = new TagPage(x);
-    p.get_view().set_comparator(Thumbnail.exposure_time_ascending_comparator, Thumbnail.exposure_time_comparator_predicate);
-    Thumbnail thumbnail = (Thumbnail) p.get_view().get_first();
-    message("created Thumbnail");
-    LibraryPhoto? photo = thumbnail.get_media_source() as LibraryPhoto;
-    // if (photo == null)
-    //     return;
-    //
-    ssp = new SlideshowPage(LibraryPhoto.global, p.get_view(), photo);
-    FullscreenWindow fsw = new FullscreenWindow(ssp);
-    
-    debug("%lf seconds to Gtk.main()", startup_timer.elapsed());
-    
-    //Application.get_instance().start();
-    Application.get_instance().start_show(fsw);
-    
+    if(x!=null){
+        TagPage p = new TagPage(x);
+        p.get_view().set_comparator(Thumbnail.exposure_time_ascending_comparator, Thumbnail.exposure_time_comparator_predicate);
+        message("create TagPage");
+        Thumbnail thumbnail = (Thumbnail) p.get_view().get_first();
+        message("created Thumbnail");
+        LibraryPhoto? photo = thumbnail.get_media_source() as LibraryPhoto;
+    //if (photo == null)
+    //     return;    
+        ssp = new SlideshowPage(LibraryPhoto.global, p.get_view(), photo);
+        FullscreenWindow fsw = new FullscreenWindow(ssp);
+        debug("%lf seconds to Gtk.main()", startup_timer.elapsed());
+        Application.get_instance().start_show(fsw);
+    }else{
+        message(@"Tag not found $tagname");
+    }
     Tag.terminate();
     LibraryPhoto.terminate();
     MediaCollectionRegistry.terminate();

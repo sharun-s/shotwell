@@ -425,6 +425,8 @@ class SlideshowPage : SinglePhotoPage {
     }
 
     private void paint_tags(Cairo.Context ctx, Dimensions ctx_dim){
+        
+
         Gee.List<Tag>? tags = Tag.global.fetch_for_source(current);
         StringBuilder tagstrbuilder = new StringBuilder("");
         bool first = true;
@@ -437,24 +439,31 @@ class SlideshowPage : SinglePhotoPage {
                 tagstrbuilder.append(", ");//TAG_LIST_SEPARATOR_STRING);
             tagstrbuilder.append(tag_name);
         }
+
         draw_text(ctx, ctx_dim, tagstrbuilder.str, 2, 0.1, 0.85, "#fff", "#000");
     }
     
     // Paint the title of the photo
     private void paint_title(Cairo.Context ctx, Dimensions ctx_dim) {
         string? title = current.get_title();
-        
+        int cnt=controller.get_count();
+        //message(@"count $cnt");
+        int idx=controller.index_of_source(current);
         // If the photo doesn't have a title, don't paint anything
         if (title == null || title == "")
-            return;
-        draw_text(ctx, ctx_dim, title, 2, 0.1, 0.9, "#fff", "#000");
+            title="";
+        //    return;
+        idx=idx+1;//index is 0 based
+        draw_text(ctx, ctx_dim, @"$title $idx/$cnt", 2, 0.1, 0.9, "#fff", "#000");
+        //draw_text(ctx, ctx_dim, @"$title $cnt", 2, 0.1, 0.9, "#fff", "#000");
+        //draw_text(ctx, ctx_dim, title, 2, 0.1, 0.9, "#fff", "#000");
     }
     
     private void paint_time(Cairo.Context ctx, Dimensions ctx_dim) {
         Time test=Time.local(current.get_exposure_time());
 
         string timestring = test.format("%k:%M %p");//Resources.get_hh_mm_format_string());
-        string daystring = test.format(Resources.get_long_date_format_string());
+        string daystring = test.format("%e %b %Y");//Resources.get_long_date_format_string());
         
         if (timestring[0] == '0')
             timestring = timestring.substring(1, -1);
@@ -469,7 +478,12 @@ class SlideshowPage : SinglePhotoPage {
         Pango.Layout layout = create_pango_layout(text);
         Pango.AttrList list = new Pango.AttrList();
         Pango.Attribute size = Pango.attr_scale_new(fontscale);
+        Pango.Attribute bg = Pango.attr_background_new(0,0,0);
+        Pango.Attribute bgalpha = Pango.attr_background_alpha_new(50000);
+        
         list.insert(size.copy());
+        list.insert(bg.copy());
+        list.insert(bgalpha.copy());
         layout.set_attributes(list);
         layout.set_height((int) ((ctx_dim.width * 0.9) * Pango.SCALE));
         
