@@ -6,26 +6,29 @@
 
 public class Tags.Branch : Sidebar.Branch {
     private Gee.HashMap<Tag, Tags.SidebarEntry> entry_map = new Gee.HashMap<Tag, Tags.SidebarEntry>();
-    
+    private static int sortby=0;
     public Branch() {
         base (new Tags.Header(),
             Sidebar.Branch.Options.HIDE_IF_EMPTY
                 | Sidebar.Branch.Options.AUTO_OPEN_ON_NEW_CHILD
                 | Sidebar.Branch.Options.STARTUP_OPEN_GROUPING,
-                rootcomparator);
-            //comparator);
+                comparator);
         
+        sortby=Config.Facade.get_instance().get_tags_sort();
+            
         // seed the branch with existing tags
         on_tags_added_removed(Tag.global.get_all(), null);
         
         // monitor collection for future events
         Tag.global.contents_altered.connect(on_tags_added_removed);
         Tag.global.items_altered.connect(on_tags_altered);
+        Config.Facade.get_instance().tags_sortorder_changed.connect(on_sort);
     }
     
     ~Branch() {
         Tag.global.contents_altered.disconnect(on_tags_added_removed);
         Tag.global.items_altered.disconnect(on_tags_altered);
+        Config.Facade.get_instance().tags_sortorder_changed.disconnect(on_sort);
     }
     
     public Tags.SidebarEntry? get_entry_for_tag(Tag tag) {
@@ -37,29 +40,41 @@ public class Tags.Branch : Sidebar.Branch {
     }
     
     private static int comparator(Sidebar.Entry a, Sidebar.Entry b) {
+        int retval;
         if (a == b)
             return 0;
-        
-        return Tag.compare_names(((Tags.SidebarEntry) a).for_tag(),
-            ((Tags.SidebarEntry) b).for_tag());
+        //int sort_by=Config.Facade.get_instance().get_tags_sort();
+        if(sortby == 0){
+            message("sorting tags by name");
+            retval=Tag.compare_names(((Tags.SidebarEntry) a).for_tag(),
+                ((Tags.SidebarEntry) b).for_tag());
+            message(@"$retval");
+            return retval;    
+        }else{
+            message("sorting tags by count");
+            retval=Tag.compare_counts(((Tags.SidebarEntry) a).for_tag(),
+                ((Tags.SidebarEntry) b).for_tag());
+            message(@"$retval");
+            return retval;
+        }
     }
-
-    private static int rootcomparator(Sidebar.Entry a, Sidebar.Entry b) {
-        if (a==b)
-            return 0;
-        return 1;
-    }
-
 
     private static int TagCntComparator(Tag a, Tag b) {
         if (a == b)
             return 0;
         int acnt=a.get_sources_count();
         int bcnt=b.get_sources_count();
-        //message("TagCNTComparator %d %s %s",acnt-bcnt,a.to_string(),b.to_string());
-        return -1*(acnt - bcnt);
+        message("TagCNTComparator %d %s %s",acnt-bcnt,a.to_string(),b.to_string());
+        return -1*(acnt - bcnt) + 1;
     }
 
+    private void on_sort(){
+        sortby=Config.Facade.get_instance().get_tags_sort();
+        message("resorting");
+        //on_tags_added_removed(Tag.global.get_all(), null);
+        reorder_all();
+        //root.reorder_children(false, children_reordered_callback);
+    }
     
     private void on_tags_added_removed(Gee.Iterable<DataObject>? added_raw, Gee.Iterable<DataObject>? removed) {
         // Store the tag whose page we'll eventually want to go to,
@@ -78,12 +93,19 @@ public class Tags.Branch : Sidebar.Branch {
                 added.add(tag);
             }
 
-            // added to sort by Tag Count
             Gee.ArrayList<Tag> added_cnt = new Gee.ArrayList<Tag>();
             foreach (Tag obj in added) {
                 added_cnt.add(obj);
             }
-            added_cnt.sort(TagCntComparator);
+
+            if(sortby == 1){
+                added_cnt.sort(TagCntComparator); // change and test with tag.compare_count
+                message("tagbranch init:sorted tags by count");
+            }
+            else{
+                message("tagbranch init:sorted tags by name");            
+            }
+            
             //foreach (Tag obj in added_cnt) {
             //    message("added_cnt: %s",obj.to_string());
             //}
@@ -214,7 +236,7 @@ public class Tags.Header : Sidebar.Header, Sidebar.InternalDropTargetEntry,
 public class Tags.SidebarEntry : Sidebar.SimplePageEntry, Sidebar.RenameableEntry,
     Sidebar.DestroyableEntry, Sidebar.InternalDropTargetEntry, Sidebar.ExpandableEntry,
     Sidebar.InternalDragSourceEntry {
-    private string single_tag_icon = Resources.ICON_ONE_TAG;
+    //private string single_tag_icon = Resources.ICON_ONE_TAG;
     
     private Tag tag;
     

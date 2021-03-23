@@ -6,6 +6,14 @@
         <attribute name="label" translatable="yes">New _Tag…</attribute>
         <attribute name="action">sidebar.tag.new</attribute>
       </item>
+      <item>
+        <attribute name="label" translatable="no">Sort by Count</attribute>
+        <attribute name="action">sidebar.tag.countsort</attribute>
+      </item>
+      <item>
+        <attribute name="label" translatable="no">Sort by Name</attribute>
+        <attribute name="action">sidebar.tag.namesort</attribute>
+      </item>
     </section>
   </menu>
 </interface>

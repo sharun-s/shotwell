@@ -540,6 +540,15 @@ public class Tag : DataSource, ContainerSource, Proxyable, Indexable {
                                           b.get_user_visible_name(), b.get_name_collation_key());
     }
 
+    public static int compare_counts(Tag a, Tag b) {
+        if ( a == b )
+            return 0;
+        //message("%d %d",a.get_sources_count(),b.get_sources_count());
+        if (a.get_sources_count() - b.get_sources_count() == 0) // wtf is this
+            return 1;
+        return -1 * (a.get_sources_count() - b.get_sources_count()); 
+    }
+
     public static uint hash_name_string(string a) {
         return String.collated_hash(a);
     }

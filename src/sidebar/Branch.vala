@@ -158,11 +158,10 @@ public class Sidebar.Branch : Object {
         public void reorder_children(bool recursive, ChildrenReorderedCallback cb) {
             if (children == null)
                 return;
-            
+            //message("Node:Reorder children of "+this.entry.to_string());
             Gee.SortedSet<Node> reordered = new Gee.TreeSet<Node>(comparator_wrapper);
             reordered.add_all(children);
             children = reordered;
-            
             if (recursive) {
                 foreach (Node child in children)
                     child.reorder_children(true, cb);
@@ -258,7 +257,7 @@ public class Sidebar.Branch : Object {
         
         parent_node.add_child(entry_node);
         map.set(entry, entry_node);
-        
+        //message("adding entry " + entry.to_string() + " to parent "+ parent.to_string());
         entry_added(entry);
     }
     

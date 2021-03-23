@@ -49,6 +49,7 @@ public enum ConfigurableProperty {
     EVENT_PHOTOS_SORT_BY,
     EVENTS_SORT_ASCENDING,
     EXPORT_CONSTRAINT,
+    TAGS_SORT_BY,
     EXPORT_EXPORT_FORMAT_MODE,
     EXPORT_EXPORT_METADATA,
     EXPORT_PHOTO_FILE_FORMAT,
@@ -183,7 +184,10 @@ public enum ConfigurableProperty {
                 
             case EVENTS_SORT_ASCENDING:
                 return "EVENTS_SORT_ASCENDING";
-                
+            
+            case TAGS_SORT_BY:
+                return "TAGS_SORT_BY";
+
             case EXPORT_CONSTRAINT:
                 return "EXPORT_CONSTRAINT";
 
@@ -371,6 +375,7 @@ public abstract class ConfigurationFacade : Object {
     public signal void transparent_background_color_changed();
     public signal void commit_metadata_to_masters_changed();
     public signal void events_sort_ascending_changed();
+    public signal void tags_sortorder_changed();
     public signal void external_app_changed();
     public signal void import_directory_changed();
     
@@ -381,7 +386,7 @@ public abstract class ConfigurationFacade : Object {
     }
 
     private void on_property_changed(ConfigurableProperty p) {
-        //debug ("ConfigurationFacade: engine reports property '%s' changed.", p.to_string());
+        debug ("ConfigurationFacade: engine reports property '%s' changed.", p.to_string());
 
         switch (p) {
             case ConfigurableProperty.AUTO_IMPORT_FROM_LIBRARY:
@@ -407,7 +412,9 @@ public abstract class ConfigurationFacade : Object {
             case ConfigurableProperty.EVENTS_SORT_ASCENDING:
                 events_sort_ascending_changed();
             break;
-            
+            case ConfigurableProperty.TAGS_SORT_BY:
+                tags_sortorder_changed();
+            break;
             case ConfigurableProperty.EXTERNAL_PHOTO_APP:
             case ConfigurableProperty.EXTERNAL_RAW_APP:
                 external_app_changed();
@@ -947,6 +954,31 @@ public abstract class ConfigurationFacade : Object {
         } catch (ConfigurationError err) {
             on_configuration_error(err);
             return;
+        }
+    }
+
+    // tag photos sort
+    //
+    public virtual int get_tags_sort() {
+        int sort_by = 1;
+        try {
+            sort_by = get_engine().get_int_property(ConfigurableProperty.TAGS_SORT_BY);
+            message(@"$sort_by");
+            return sort_by;
+        } catch (ConfigurationError err) {
+            on_configuration_error(err);
+            return sort_by;
+        }
+    }
+
+    public virtual void set_tags_sort(int sort_by) {
+        try {
+            //get_engine().set_bool_property(ConfigurableProperty.EVENT_PHOTOS_SORT_ASCENDING,
+            //    sort_order);
+            get_engine().set_int_property(ConfigurableProperty.TAGS_SORT_BY,
+                sort_by);
+        } catch (ConfigurationError err) {
+            on_configuration_error(err);
         }
     }
 

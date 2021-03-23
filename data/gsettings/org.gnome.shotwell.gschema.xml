@@ -120,6 +120,12 @@
         <description>Specifies the sort criteria for event photos</description>
     </key>
 
+    <key name="tags-sort-by" type="i">
+        <default>1</default>
+        <summary>sort tags in sidebar</summary>
+        <description>Sort by name=0 Sort by count=1[default]</description>
+    </key>
+
     <key name="use-24-hour-time" type="b">
         <default>false</default>
         <summary>use 24 hour time</summary>

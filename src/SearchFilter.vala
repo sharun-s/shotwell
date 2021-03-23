@@ -1071,7 +1071,7 @@ public class SearchFilterToolbar : Gtk.Revealer {
     private ToggleActionToolButton toolbtn_flag;
     private Gtk.SeparatorToolItem sepr_mediatype_flagged;
     private Gtk.SeparatorToolItem sepr_flagged_rating;
-    private Gtk.SeparatorToolItem sepr_rating_saved;
+    //private Gtk.SeparatorToolItem sepr_rating_saved;
     
     public SearchFilterToolbar(SearchFilterActions actions) {
         this.actions = actions;

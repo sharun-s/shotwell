@@ -191,7 +191,9 @@ public class Sidebar.Tree : Gtk.TreeView {
 
     private const GLib.ActionEntry[] entries = {
         { "tag.new", on_new_tag },
-        { "search.new", on_new_search }
+        { "search.new", on_new_search },
+        { "tag.countsort",on_sort_by_tagcount },
+        { "tag.namesort",on_sort_by_tagname }
     };
 
     private void setup_default_context_menu() {
@@ -784,8 +786,6 @@ public class Sidebar.Tree : Gtk.TreeView {
 	return Gdk.pixbuf_get_from_surface(surface, 0, 0, surface.get_width(), surface.get_height());
     }
     
-
-
     private void load_entry_icons(Gtk.TreeIter iter) {
         EntryWrapper? wrapper = get_wrapper_at_iter(iter);
         Icon? icon = null;
@@ -1226,6 +1226,17 @@ public class Sidebar.Tree : Gtk.TreeView {
         NewRootTagCommand creation_command = new NewRootTagCommand();
         AppWindow.get_command_manager().execute(creation_command);
         LibraryWindow.get_app().rename_tag_in_sidebar(creation_command.get_created_tag());
-    }    
+    }
+
+    private void on_sort_by_tagcount() {
+        debug("set tags sort 1 - by count");
+        Config.Facade.get_instance().set_tags_sort(1);
+    }
+
+    private void on_sort_by_tagname() {
+        debug("set tags sort 0 - by name");
+        Config.Facade.get_instance().set_tags_sort(0);
+    }
+
 }
 
