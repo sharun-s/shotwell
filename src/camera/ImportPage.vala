@@ -311,6 +311,34 @@ class ImportPreview : MediaSourceItem {
         set_image(pixbuf);
     }
     
+    public bool newer_than_lastimportevent(){
+        PhotoImportSource photo_import_source = get_import_source() as PhotoImportSource;
+        if (photo_import_source != null) {
+            time_t exposure_time = photo_import_source.get_exposure_time();
+            if (exposure_time == 0){
+                debug("exp time is 0");
+                return true;
+            }
+
+            ImportID last = MediaCollectionRegistry.get_instance().get_last_import_id();
+            DateTime latest = new DateTime.from_unix_local(last.id);
+
+            DateTime dt = new DateTime.from_unix_local(exposure_time);
+            if (dt.compare(latest) >= 0){
+                // debug("last import was at %s",latest.format("%c"));
+                // debug("%s taken at %s",photo_import_source.get_name(), dt.format("%c"));
+                // debug("VALID! show thumb");
+                return false;
+            }else{
+                // debug("last import was at %s",latest.format("%c"));
+                // debug("%s taken at %s",photo_import_source.get_name(), dt.format("%c"));
+                // debug("INVALID! dont show thumb");
+                return true;
+            }
+        }
+        return false;
+    }
+
     public bool is_already_imported() {
         PhotoImportSource photo_import_source = get_import_source() as PhotoImportSource;
         if (photo_import_source != null) {
@@ -676,12 +704,20 @@ public class ImportPage : CheckerboardPage {
         }
     }
     
+    // View filter to show photos since last import.
+    private class ShowLatestViewFilter : ViewFilter {
+        public override bool predicate(DataView view) {
+            return !((ImportPreview) view).newer_than_lastimportevent();
+        }
+    }
+
     public static GPhoto.ContextWrapper null_context = null;
     public static GPhoto.SpinIdleWrapper spin_idle_context = null;
 
     private SourceCollection import_sources = null;
     private Gtk.Label camera_label = new Gtk.Label(null);
     private Gtk.CheckButton hide_imported;
+    private Gtk.CheckButton show_latest;
     private Gtk.ProgressBar progress_bar = new Gtk.ProgressBar();
     private DiscoveredCamera dcamera;
     private bool busy = false;
@@ -692,6 +728,7 @@ public class ImportPage : CheckerboardPage {
     private ImportPage? local_ref = null;
     private ImportPageSearchViewFilter search_filter = new ImportPageSearchViewFilter();
     private HideImportedViewFilter hide_imported_filter = new HideImportedViewFilter();
+    private ShowLatestViewFilter show_latest_filter = new ShowLatestViewFilter();
     private CameraViewTracker tracker;
 
 #if UNITY_SUPPORT
@@ -769,6 +806,17 @@ public class ImportPage : CheckerboardPage {
             
             toolbar.insert(hide_item, -1);
             
+            show_latest = new Gtk.CheckButton.with_label(_("Select Latest"));
+            show_latest.set_tooltip_text(_("Only import photos since last import"));
+            show_latest.clicked.connect(on_show_latest);
+            show_latest.sensitive = true;
+            show_latest.active = true;//Config.Facade.get_instance().get_hide_photos_already_imported();
+            Gtk.ToolItem latest_item = new Gtk.ToolItem();
+            latest_item.is_important = true;
+            latest_item.add(show_latest);
+            
+            toolbar.insert(latest_item, -1);
+
             // separator to force buttons to right side of toolbar
             Gtk.SeparatorToolItem separator = new Gtk.SeparatorToolItem();
             separator.set_draw(false);
@@ -794,7 +842,7 @@ public class ImportPage : CheckerboardPage {
             
             // Separator
             toolbar.insert(new Gtk.SeparatorToolItem(), -1);
-            
+
             // Import selected
             Gtk.ToolButton import_selected_button = new Gtk.ToolButton(null, null);
             import_selected_button.set_icon_name(Resources.IMPORT);
@@ -963,7 +1011,8 @@ public class ImportPage : CheckerboardPage {
 
     public override void ready() {
         try_refreshing_camera(false);
-        hide_imported_filter.refresh();
+        //hide_imported_filter.refresh();
+        show_latest_filter.refresh();
     }
 
     private void try_refreshing_camera(bool fail_on_locked) {
@@ -1633,6 +1682,15 @@ public class ImportPage : CheckerboardPage {
         Config.Facade.get_instance().set_hide_photos_already_imported(hide_imported.get_active());
     }
     
+    private void on_show_latest(){
+        if (show_latest.get_active())
+            get_view().install_view_filter(show_latest_filter);
+        else
+            get_view().remove_view_filter(show_latest_filter);
+        
+        //Config.Facade.get_instance().set_hide_photos_already_imported(hide_imported.get_active());
+    }
+
     private void on_import_selected() {
         import(get_view().get_selected());
     }
