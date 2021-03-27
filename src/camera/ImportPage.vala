@@ -717,7 +717,7 @@ public class ImportPage : CheckerboardPage {
     private SourceCollection import_sources = null;
     private Gtk.Label camera_label = new Gtk.Label(null);
     private Gtk.CheckButton hide_imported;
-    private Gtk.CheckButton show_latest;
+    private Gtk.CheckButton show_latest_checkbox;
     private Gtk.ProgressBar progress_bar = new Gtk.ProgressBar();
     private DiscoveredCamera dcamera;
     private bool busy = false;
@@ -728,7 +728,7 @@ public class ImportPage : CheckerboardPage {
     private ImportPage? local_ref = null;
     private ImportPageSearchViewFilter search_filter = new ImportPageSearchViewFilter();
     private HideImportedViewFilter hide_imported_filter = new HideImportedViewFilter();
-    private ShowLatestViewFilter show_latest_filter = new ShowLatestViewFilter();
+    //private ShowLatestViewFilter show_latest_filter = new ShowLatestViewFilter();
     private CameraViewTracker tracker;
 
 #if UNITY_SUPPORT
@@ -806,14 +806,14 @@ public class ImportPage : CheckerboardPage {
             
             toolbar.insert(hide_item, -1);
             
-            show_latest = new Gtk.CheckButton.with_label(_("Select Latest"));
-            show_latest.set_tooltip_text(_("Only import photos since last import"));
-            show_latest.clicked.connect(on_show_latest);
-            show_latest.sensitive = true;
-            show_latest.active = true;//Config.Facade.get_instance().get_hide_photos_already_imported();
+            show_latest_checkbox = new Gtk.CheckButton.with_label(_("Select Latest"));
+            show_latest_checkbox.set_tooltip_text(_("Only import photos since last import"));
+            show_latest_checkbox.clicked.connect(on_show_latest);
+            show_latest_checkbox.sensitive = true;
+            show_latest_checkbox.active = Config.Facade.get_instance().get_show_photos_since_lastimport();
             Gtk.ToolItem latest_item = new Gtk.ToolItem();
             latest_item.is_important = true;
-            latest_item.add(show_latest);
+            latest_item.add(show_latest_checkbox);
             
             toolbar.insert(latest_item, -1);
 
@@ -1011,8 +1011,8 @@ public class ImportPage : CheckerboardPage {
 
     public override void ready() {
         try_refreshing_camera(false);
-        //hide_imported_filter.refresh();
-        show_latest_filter.refresh();
+        hide_imported_filter.refresh();
+        //show_latest_filter.refresh();
     }
 
     private void try_refreshing_camera(bool fail_on_locked) {
@@ -1428,6 +1428,10 @@ public class ImportPage : CheckerboardPage {
         }
         files.sort();
 
+        bool showlatest=show_latest_checkbox.get_active();//Config.Facade.get_instance().get_show_photos_since_lastimport();
+        ImportID last = MediaCollectionRegistry.get_instance().get_last_import_id();
+        DateTime latest = new DateTime.from_unix_local(last.id);
+
         for (int ctr = 0; ctr < files.count(); ctr++) {
             string filename;
             refresh_result = files.get_name(ctr, out filename);
@@ -1452,7 +1456,13 @@ public class ImportPage : CheckerboardPage {
                         
                     continue;
                 }
-                
+
+                if(showlatest){
+                    DateTime dt = new DateTime.from_unix_local(info.file.mtime);
+                    if (latest.compare(dt) >= 0)
+                        continue;
+                }
+
                 if (VideoReader.is_supported_video_filename(filename)) {
                     VideoImportSource video_source = new VideoImportSource(dcamera.display_name, dcamera.gcamera,
                         fsid, dir, filename, info.file.size, info.file.mtime);
@@ -1683,12 +1693,11 @@ public class ImportPage : CheckerboardPage {
     }
     
     private void on_show_latest(){
-        if (show_latest.get_active())
-            get_view().install_view_filter(show_latest_filter);
-        else
-            get_view().remove_view_filter(show_latest_filter);
-        
-        //Config.Facade.get_instance().set_hide_photos_already_imported(hide_imported.get_active());
+        // if (show_latest.get_active())
+        //     get_view().install_view_filter(show_latest_filter);
+        // else
+        //     get_view().remove_view_filter(show_latest_filter);
+        Config.Facade.get_instance().set_show_photos_since_lastimport(show_latest_checkbox.get_active());
     }
 
     private void on_import_selected() {

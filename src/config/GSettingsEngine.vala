@@ -71,6 +71,7 @@ public class GSettingsConfigurationEngine : ConfigurationEngine, GLib.Object {
         schema_names[ConfigurableProperty.EXTERNAL_PHOTO_APP] = EDITING_PREFS_SCHEMA_NAME;
         schema_names[ConfigurableProperty.EXTERNAL_RAW_APP] = EDITING_PREFS_SCHEMA_NAME;
         schema_names[ConfigurableProperty.HIDE_PHOTOS_ALREADY_IMPORTED] = UI_PREFS_SCHEMA_NAME;
+        schema_names[ConfigurableProperty.SHOW_PHOTOS_SINCE_LASTIMPORT] = UI_PREFS_SCHEMA_NAME;        
         schema_names[ConfigurableProperty.IMPORT_DIR] = FILES_PREFS_SCHEMA_NAME;
         schema_names[ConfigurableProperty.KEEP_RELATIVITY] = UI_PREFS_SCHEMA_NAME;
         schema_names[ConfigurableProperty.LAST_CROP_HEIGHT] = CROP_SCHEMA_NAME;
@@ -149,6 +150,7 @@ public class GSettingsConfigurationEngine : ConfigurationEngine, GLib.Object {
         key_names[ConfigurableProperty.EXTERNAL_PHOTO_APP] = "external-photo-editor";
         key_names[ConfigurableProperty.EXTERNAL_RAW_APP] = "external-raw-editor";
         key_names[ConfigurableProperty.HIDE_PHOTOS_ALREADY_IMPORTED] = "hide-photos-already-imported";
+        key_names[ConfigurableProperty.SHOW_PHOTOS_SINCE_LASTIMPORT] = "show-photos-since-lastimport";
         key_names[ConfigurableProperty.IMPORT_DIR] = "import-dir";
         key_names[ConfigurableProperty.KEEP_RELATIVITY] = "keep-relativity";
         key_names[ConfigurableProperty.LAST_CROP_HEIGHT] = "last-crop-height";

@@ -191,6 +191,12 @@
         <summary>Selection state of “hide photos” option</summary>
         <description>Last used selection state of the “hide photos already imported” option in the import page</description>
     </key>
+
+    <key name="show-photos-since-lastimport" type="b">
+        <default>true</default>
+        <summary>Selection state of “show latest” option in Import Page</summary>
+        <description>Last used selection state of the “show latest photos” option in the import page. Photos with datetime older that datetime of last import session are hidden</description>
+    </key>
 </schema>
 
 <schema id="org.gnome.shotwell.preferences.slideshow">

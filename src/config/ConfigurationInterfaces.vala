@@ -58,6 +58,7 @@ public enum ConfigurableProperty {
     EXTERNAL_PHOTO_APP,
     EXTERNAL_RAW_APP,
     HIDE_PHOTOS_ALREADY_IMPORTED,
+    SHOW_PHOTOS_SINCE_LASTIMPORT,
     IMPORT_DIR,
     KEEP_RELATIVITY,
     LAST_CROP_HEIGHT,
@@ -214,7 +215,10 @@ public enum ConfigurableProperty {
             
             case HIDE_PHOTOS_ALREADY_IMPORTED:
                 return "HIDE_PHOTOS_ALREADY_IMPORTED";
-                
+
+            case SHOW_PHOTOS_SINCE_LASTIMPORT:
+                return "SHOW_PHOTOS_SINCE_LASTIMPORT";
+
             case IMPORT_DIR:
                 return "IMPORT_DIR";
                 
@@ -386,7 +390,7 @@ public abstract class ConfigurationFacade : Object {
     }
 
     private void on_property_changed(ConfigurableProperty p) {
-        debug ("ConfigurationFacade: engine reports property '%s' changed.", p.to_string());
+        //debug ("ConfigurationFacade: engine reports property '%s' changed.", p.to_string());
 
         switch (p) {
             case ConfigurableProperty.AUTO_IMPORT_FROM_LIBRARY:
@@ -1185,6 +1189,27 @@ public abstract class ConfigurationFacade : Object {
     public virtual void set_hide_photos_already_imported(bool hide_imported) {
         try {
             get_engine().set_bool_property(ConfigurableProperty.HIDE_PHOTOS_ALREADY_IMPORTED, hide_imported);
+        } catch (ConfigurationError err) {
+            on_configuration_error(err);
+        }
+    }
+
+    //
+    // show photos with datetime greater than datetime of last import session
+    //
+    public virtual bool get_show_photos_since_lastimport() {
+        try {
+            return get_engine().get_bool_property(ConfigurableProperty.SHOW_PHOTOS_SINCE_LASTIMPORT);
+        } catch (ConfigurationError err) {
+            on_configuration_error(err);
+            
+            return true;
+        }
+    }
+    
+    public virtual void set_show_photos_since_lastimport(bool show_latest) {
+        try {
+            get_engine().set_bool_property(ConfigurableProperty.SHOW_PHOTOS_SINCE_LASTIMPORT, show_latest);
         } catch (ConfigurationError err) {
             on_configuration_error(err);
         }
