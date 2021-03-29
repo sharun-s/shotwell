@@ -45,16 +45,16 @@ public class Tags.Branch : Sidebar.Branch {
             return 0;
         //int sort_by=Config.Facade.get_instance().get_tags_sort();
         if(sortby == 0){
-            message("sorting tags by name");
+            //debug("sorting tags by name");
             retval=Tag.compare_names(((Tags.SidebarEntry) a).for_tag(),
                 ((Tags.SidebarEntry) b).for_tag());
-            message(@"$retval");
+            //debug(@"$retval");
             return retval;    
         }else{
-            message("sorting tags by count");
+            //debug("sorting tags by count");
             retval=Tag.compare_counts(((Tags.SidebarEntry) a).for_tag(),
                 ((Tags.SidebarEntry) b).for_tag());
-            message(@"$retval");
+            //debug(@"$retval");
             return retval;
         }
     }
@@ -64,7 +64,7 @@ public class Tags.Branch : Sidebar.Branch {
             return 0;
         int acnt=a.get_sources_count();
         int bcnt=b.get_sources_count();
-        message("TagCNTComparator %d %s %s",acnt-bcnt,a.to_string(),b.to_string());
+        //debug("TagCNTComparator %d %s %s",acnt-bcnt,a.to_string(),b.to_string());
         return -1*(acnt - bcnt) + 1;
     }
 
@@ -100,10 +100,10 @@ public class Tags.Branch : Sidebar.Branch {
 
             if(sortby == 1){
                 added_cnt.sort(TagCntComparator); // change and test with tag.compare_count
-                message("tagbranch init:sorted tags by count");
+                //debug("tagbranch init:sorted tags by count");
             }
             else{
-                message("tagbranch init:sorted tags by name");            
+                //debug("tagbranch init:sorted tags by name");            
             }
             
             //foreach (Tag obj in added_cnt) {
