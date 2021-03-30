@@ -382,6 +382,16 @@ private class BasicProperties : Properties {
                 add_line("", video_num_string);
         }
 
+        if (page is TagPage){
+            Gee.HashMap<string,int> related= ((TagPage)page).get_related_tags();
+            string tmp="";
+            foreach(string r in related.keys){
+                //message("%s %d",r, related[r]);
+                tmp += "%s %d".printf(r, related[r]);
+            }
+            add_line("Related", tmp);
+        }
+
         if (start_time != 0) {
             string start_date = get_prettyprint_date(Time.local(start_time));
             string start_time = get_prettyprint_time(Time.local(start_time));

@@ -14,22 +14,6 @@ public class TagPage : CollectionPage {
         
         Tag.global.items_altered.connect(on_tags_altered);
         tag.mirror_sources(get_view(), create_thumbnail);
-        Gee.Collection<MediaSource> s= tag.get_sources();
-        Gee.HashMap<string,int> related=new Gee.HashMap<string,int>();
-        foreach (MediaSource m in s) {
-            Gee.List<Tag>? tags = Tag.global.fetch_for_source(m);
-            foreach(Tag t in tags) {
-                string tag_name = t.get_user_visible_name();
-                if (tag_name != tag.get_user_visible_name())
-                    if (related.has_key(tag_name))
-                        related[tag_name]=related[tag_name] + 1;
-                    else 
-                        related[tag_name]=1;
-            }
-        }
-        foreach(string r in related.keys){
-            message("%s %d",r, related[r]);
-        }
 
         init_page_context_menu("TagsContextMenu");
     }
@@ -48,6 +32,23 @@ public class TagPage : CollectionPage {
         return tag;
     }
     
+    public Gee.HashMap<string,int> get_related_tags(){
+        Gee.Collection<MediaSource> s= tag.get_sources();
+        Gee.HashMap<string,int> related=new Gee.HashMap<string,int>();
+        foreach (MediaSource m in s) {
+            Gee.List<Tag>? tags = Tag.global.fetch_for_source(m);
+            foreach(Tag t in tags) {
+                string tag_name = t.get_user_visible_name();
+                if (tag_name != tag.get_user_visible_name())
+                    if (related.has_key(tag_name))
+                        related[tag_name]=related[tag_name] + 1;
+                    else 
+                        related[tag_name]=1;
+            }
+        }
+        return related;
+    }
+
     protected override void get_config_photos_sort(out bool sort_order, out int sort_by) {
         Config.Facade.get_instance().get_event_photos_sort(out sort_order, out sort_by);
     }

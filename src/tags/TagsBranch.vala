@@ -102,9 +102,9 @@ public class Tags.Branch : Sidebar.Branch {
                 added_cnt.sort(TagCntComparator); // change and test with tag.compare_count
                 //debug("tagbranch init:sorted tags by count");
             }
-            else{
+            //else{
                 //debug("tagbranch init:sorted tags by name");            
-            }
+            //}
             
             //foreach (Tag obj in added_cnt) {
             //    message("added_cnt: %s",obj.to_string());
