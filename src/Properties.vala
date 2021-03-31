@@ -16,8 +16,14 @@ private abstract class Properties : Gtk.Box {
         pack_start(grid, false, false, 0);
     }
 
+    public signal void relatedtag_clicked(string? text);
+
     private bool filtertagpage(Gtk.Label l, string uri){
         message("clicked %s",uri);
+        relatedtag_clicked(uri);
+        SearchViewFilter svf = ((TagPage) AppWindow.get_instance().get_current_page()).get_search_view_filter();
+        svf.set_search_filter(uri);
+        svf.refresh();
         return true;
     }
 
