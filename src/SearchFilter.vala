@@ -14,6 +14,7 @@ public enum SearchFilterCriteria {
     MEDIA,
     RATING,
     SAVEDSEARCH,
+    ORIENTATION,
     ALL = 0xFFFFFFFF
 }
 
@@ -51,6 +52,10 @@ public abstract class SearchViewFilter : ViewFilter {
     public bool show_media_video { get; set; default = true; }
     public bool show_media_photos { get; set; default = true; }
     public bool show_media_raw { get; set; default = true; }
+    
+    // Orientation.
+    public bool show_landscape { get; set; default = true; }
+    public bool show_portrait { get; set; default = true; }
     
     // Search text filter.  Should only be set to lower-case.
     private string? search_filter = null;
@@ -173,6 +178,11 @@ public abstract class SearchViewFilter : ViewFilter {
         return ((show_media_video || show_media_photos || show_media_raw) && 
             !(show_media_video && show_media_photos && show_media_raw));
     }
+
+    public bool filter_by_orientation() {
+        return ((show_landscape || show_portrait) && 
+            !(show_landscape && show_portrait));
+    }
 }
 
 // This class provides a default predicate implementation used for CollectionPage
@@ -208,6 +218,18 @@ public abstract class DefaultSearchViewFilter : SearchViewFilter {
                         return false;
                 } else if (!show_media_photos)
                     return false;
+            }
+        }
+
+        // Orientation.
+        if (((SearchFilterCriteria.ORIENTATION & criteria) != 0) && filter_by_orientation()) {
+            if (source is PhotoSource) {
+                PhotoSource photo = source as PhotoSource;
+                Dimensions d=photo.get_dimensions();
+                if (d.width<d.height && !show_landscape)
+                    return false;
+                if (d.height<d.width && !show_portrait)
+                        return false;
             }
         }
         
@@ -365,6 +387,18 @@ public class SearchFilterActions {
         }
     }
     
+    public unowned GLib.SimpleAction? landscape {
+        get {
+            return get_action ("display.landscape");
+        }
+    }
+    
+    public unowned GLib.SimpleAction? portrait {
+        get {
+            return get_action ("display.portrait");
+        }
+    }
+
     public unowned GLib.SimpleAction? raw {
         get {
             return get_action ("display.raw");
@@ -399,6 +433,10 @@ public class SearchFilterActions {
     public signal void videos_toggled(bool on);
     
     public signal void raw_toggled(bool on);
+
+    public signal void landscape_toggled(bool on);
+    
+    public signal void portrait_toggled(bool on);
     
     public signal void rating_changed(RatingFilter filter);
     
@@ -456,6 +494,8 @@ public class SearchFilterActions {
         photos.change_state (false);
         raw.change_state (false);
         videos.change_state (false);
+        portrait.change_state (false);
+        landscape.change_state (false);
         Variant v = "%d".printf (RatingFilter.UNRATED_OR_HIGHER);
         rating.change_state (v);
 
@@ -550,7 +590,9 @@ public class SearchFilterActions {
         { "display.flagged", on_action_toggle, null, "false", on_flagged_toggled },
         { "display.photos", on_action_toggle, null, "false", on_photos_toggled },
         { "display.videos", on_action_toggle, null, "false", on_videos_toggled },
-        { "display.raw", on_action_toggle, null, "false", on_raw_toggled }
+        { "display.raw", on_action_toggle, null, "false", on_raw_toggled },
+        { "display.landscape", on_action_toggle, null, "false", on_landscape_toggled },
+        { "display.portrait", on_action_toggle, null, "false", on_portrait_toggled },
     };
 
     private void on_action_radio (GLib.SimpleAction action,
@@ -600,6 +642,18 @@ public class SearchFilterActions {
                                  GLib.Variant      value) {
         action.set_state (value);
         raw_toggled (value.get_boolean ());
+    }
+
+    private void on_landscape_toggled (GLib.SimpleAction action,
+                                    GLib.Variant      value) {
+        action.set_state (value);
+        landscape_toggled (value.get_boolean ());
+    }
+    
+    private void on_portrait_toggled (GLib.SimpleAction action,
+                                    GLib.Variant      value) {
+        action.set_state (value);
+        portrait_toggled (value.get_boolean ());
     }
     
     public bool get_has_photos() {
@@ -1068,6 +1122,8 @@ public class SearchFilterToolbar : Gtk.Revealer {
     private ToggleActionToolButton toolbtn_photos;
     private ToggleActionToolButton toolbtn_videos;
     private ToggleActionToolButton toolbtn_raw;
+    private ToggleActionToolButton toolbtn_landscape;
+    private ToggleActionToolButton toolbtn_portrait;
     private ToggleActionToolButton toolbtn_flag;
     private Gtk.SeparatorToolItem sepr_mediatype_flagged;
     private Gtk.SeparatorToolItem sepr_flagged_rating;
@@ -1114,10 +1170,17 @@ public class SearchFilterToolbar : Gtk.Revealer {
         toolbtn_raw = new ToggleActionToolButton("win.display.raw");
         toolbtn_raw.set_tooltip_text(_("RAW Photos"));
         
+        toolbtn_landscape = new ToggleActionToolButton("win.display.landscape");
+        toolbtn_landscape.set_tooltip_text(_("Landscape"));
+        
+        toolbtn_portrait = new ToggleActionToolButton("win.display.portrait");
+        toolbtn_portrait.set_tooltip_text(_("Portrait"));
+
         toolbar.insert(toolbtn_photos, -1);
         toolbar.insert(toolbtn_videos, -1);
         toolbar.insert(toolbtn_raw, -1);
-        
+        toolbar.insert(toolbtn_landscape, -1);
+        toolbar.insert(toolbtn_portrait, -1);
         // separator
         //sepr_mediatype_flagged = new Gtk.SeparatorToolItem();
         //toolbar.insert(sepr_mediatype_flagged, -1);
@@ -1168,6 +1231,8 @@ public class SearchFilterToolbar : Gtk.Revealer {
         actions.photos_toggled.connect(on_photos_toggled);
         actions.videos_toggled.connect(on_videos_toggled);
         actions.raw_toggled.connect(on_raw_toggled);
+        actions.landscape_toggled.connect(on_landscape_toggled);
+        actions.portrait_toggled.connect(on_portrait_toggled);
         actions.rating_changed.connect(on_rating_changed);
         actions.text_changed.connect(on_search_text_changed);
         actions.criteria_changed.connect(on_criteria_changed);
@@ -1187,6 +1252,8 @@ public class SearchFilterToolbar : Gtk.Revealer {
         actions.photos_toggled.disconnect(on_photos_toggled);
         actions.videos_toggled.disconnect(on_videos_toggled);
         actions.raw_toggled.disconnect(on_raw_toggled);
+        actions.landscape_toggled.disconnect(on_landscape_toggled);
+        actions.portrait_toggled.disconnect(on_portrait_toggled);
         actions.rating_changed.disconnect(on_rating_changed);
         actions.text_changed.disconnect(on_search_text_changed);
         actions.criteria_changed.disconnect(on_criteria_changed);
@@ -1254,11 +1321,19 @@ public class SearchFilterToolbar : Gtk.Revealer {
     private void on_photos_toggled() {
         update();
     }
-    
+
     private void on_raw_toggled() {
         update();
     }
     
+    private void on_landscape_toggled() {
+        update();
+    }
+    
+    private void on_portrait_toggled() {
+        update();
+    }
+
     private void on_search_text_changed() {
         update();
     }
@@ -1321,6 +1396,11 @@ public class SearchFilterToolbar : Gtk.Revealer {
             ().get_boolean ();
         search_filter.show_media_raw = actions.raw.get_state ().get_boolean ();
 
+        search_filter.show_landscape = actions.landscape.get_state
+            ().get_boolean ();
+        search_filter.show_portrait = actions.portrait.get_state
+            ().get_boolean ();
+
         var filter = (RatingFilter) int.parse (actions.rating.get_state ().get_string ());
         search_filter.set_rating_filter(filter);
         rating_button.set_filter_icon(filter);
@@ -1341,6 +1421,9 @@ public class SearchFilterToolbar : Gtk.Revealer {
         toolbtn_photos.visible = ((criteria & SearchFilterCriteria.MEDIA) != 0); 
         toolbtn_videos.visible = ((criteria & SearchFilterCriteria.MEDIA) != 0);
         toolbtn_raw.visible = ((criteria & SearchFilterCriteria.MEDIA) != 0);
+
+        toolbtn_landscape.visible = ((criteria & SearchFilterCriteria.ORIENTATION) != 0); 
+        toolbtn_portrait.visible = ((criteria & SearchFilterCriteria.ORIENTATION) != 0);
 
         saved_search_button.visible = ((criteria & SearchFilterCriteria.SAVEDSEARCH) != 0);
 

@@ -22,7 +22,7 @@ public abstract class CollectionPage : MediaPage {
     protected class CollectionSearchViewFilter : DefaultSearchViewFilter {
         public override uint get_criteria() {
             return SearchFilterCriteria.TEXT | SearchFilterCriteria.FLAG | 
-                SearchFilterCriteria.MEDIA | SearchFilterCriteria.RATING | SearchFilterCriteria.SAVEDSEARCH;
+                SearchFilterCriteria.MEDIA | SearchFilterCriteria.RATING | SearchFilterCriteria.SAVEDSEARCH | SearchFilterCriteria.ORIENTATION;
         }
     }
     
