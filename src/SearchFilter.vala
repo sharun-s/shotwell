@@ -226,10 +226,10 @@ public abstract class DefaultSearchViewFilter : SearchViewFilter {
             if (source is PhotoSource) {
                 PhotoSource photo = source as PhotoSource;
                 Dimensions d=photo.get_dimensions();
-                if (d.width<d.height && !show_landscape)
+                if (d.width>d.height && !show_landscape)
                     return false;
-                if (d.height<d.width && !show_portrait)
-                        return false;
+                if (d.height>d.width && !show_portrait)
+                    return false;
             }
         }
         
@@ -1172,9 +1172,11 @@ public class SearchFilterToolbar : Gtk.Revealer {
         
         toolbtn_landscape = new ToggleActionToolButton("win.display.landscape");
         toolbtn_landscape.set_tooltip_text(_("Landscape"));
+        toolbtn_landscape.set_icon_name("video-display-symbolic");
         
         toolbtn_portrait = new ToggleActionToolButton("win.display.portrait");
         toolbtn_portrait.set_tooltip_text(_("Portrait"));
+        toolbtn_portrait.set_icon_name("phone-symbolic");
 
         toolbar.insert(toolbtn_photos, -1);
         toolbar.insert(toolbtn_videos, -1);
