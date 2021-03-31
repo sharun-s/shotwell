@@ -16,7 +16,12 @@ private abstract class Properties : Gtk.Box {
         pack_start(grid, false, false, 0);
     }
 
-    protected void add_line(string label_text, string info_text, bool multi_line = false, string? href = null) {
+    private bool filtertagpage(Gtk.Label l, string uri){
+        message("clicked %s",uri);
+        return true;
+    }
+
+    protected void add_line(string label_text, string info_text, bool multi_line = false, string? href = null, bool selectable=true) {
         Gtk.Label label = new Gtk.Label("");
         Gtk.Widget info;
 
@@ -53,6 +58,14 @@ private abstract class Properties : Gtk.Box {
                 info_label.set_markup(is_string_empty(info_text) ? "" : info_text);
             } else {
                 info_label.set_markup("<a href=\"%s\">%s</a>".printf(href, info_text));
+                // Right now only used by the related tag property in basic properties shown when a TagPage is opened. 
+                // Clickhandler filtertagpage should filter collection based on uri passed in href 
+                // BAD hack! but god know what the right way to do this is. 
+                // Look at existing Clickable tags impl in TagPage/CheckBoardItemText/Layout 
+                // but in that impl there is too much bs involved computing which item selected from layout using mouse position x y etc and it finally calls switch to Page (note that is different from filtering the existing tagpage viewcollection)     
+                if (label_text == "Related" || label_text == ""){
+                    info_label.activate_link.connect(filtertagpage);
+                }
             }
             info_label.set_ellipsize(Pango.EllipsizeMode.END);
             info_label.halign = Gtk.Align.START;
@@ -60,7 +73,7 @@ private abstract class Properties : Gtk.Box {
             info_label.hexpand = false;
             info_label.vexpand = false;
             info_label.set_justify(Gtk.Justification.LEFT);
-            info_label.set_selectable(true);
+            info_label.set_selectable(selectable);
             label.halign = Gtk.Align.END;
             label.valign = Gtk.Align.FILL;
             info = (Gtk.Widget) info_label;
@@ -385,11 +398,17 @@ private class BasicProperties : Properties {
         if (page is TagPage){
             Gee.HashMap<string,int> related= ((TagPage)page).get_related_tags();
             string tmp="";
+            int first=0;
             foreach(string r in related.keys){
                 //message("%s %d",r, related[r]);
-                tmp += "%s %d".printf(r, related[r]);
+                tmp = "%s (%d)".printf(r, related[r]);
+                if (first==0){
+                    add_line("Related", tmp,false, r,false);
+                    first=first+1;
+                }else{
+                    add_line("", tmp,false,r,false);
+                }
             }
-            add_line("Related", tmp);
         }
 
         if (start_time != 0) {
