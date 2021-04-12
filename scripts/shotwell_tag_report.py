@@ -14,10 +14,14 @@ import sys
 import argparse
 import matplotlib.pyplot as mp
 import matplotlib.collections as col
-parser = argparse.ArgumentParser(description='Shotwell Tags Inspector')
-parser.add_argument('-r', nargs='?', help='show related tags given a tag')
-parser.add_argument('-f', nargs='?', help='show filenames given a tag')
-parser.add_argument('-d', nargs='?', help='show dates given a tag')
+import calplot
+parser = argparse.ArgumentParser(description='Shotwell Tags Inspector.', epilog=' If Tag not specified generates a report on all Tags.')
+parser.add_argument('-r', nargs='?', metavar='Tag', help='show related tags given a tag')
+parser.add_argument('-f', nargs='?', metavar='Tag', help='show filenames given a tag')
+parser.add_argument('-d', nargs='?', metavar='Tag', help='show dates given a tag')
+parser.add_argument('-cal', nargs='?', metavar='Tag', help='show calendar given a tag')
+parser.add_argument('-age', nargs='?', metavar='Tag', help='days since last photo taken given a tag')
+
 
 #parser.add_argument('tag')
 args = parser.parse_args()
@@ -150,6 +154,19 @@ elif args.d :
 			color='#002f4f',fontsize=12)
 		ax1.add_collection(collection)
 	mp.show()
+elif args.cal:
+	l=getDetailsGivenTag(args.cal)
+	ddf=getDatesfromTagPhotoIDList(l)
+	ddf.columns=['d']
+	ddf['Count']=0
+	# to plot no bars on days no photo was taken a Count col with 0 created
+	cnts=ddf.groupby(p.Grouper(key='d',freq='D')).count()
+	events=p.Series(cnts.Count, index=cnts.index)
+	calplot.calplot(events, edgecolor=None, cmap='YlGn',colorbar=True, suptitle=args.cal+'- photos per day',linewidth=1)
+	mp.show()
+
+elif args.age:
+	print('days since last photo given tag '+ args.age)
 else:
 	print('Photo count',len(g))
 	print('Tag count',len(f))
