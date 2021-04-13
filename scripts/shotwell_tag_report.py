@@ -88,6 +88,8 @@ def getDatesfromTagPhotoIDList(tag_photoidlist, printdates=True):
 	names=[re.sub(r'WP_(\d+?)_(\d\d)_(\d\d)_(\d\d)_Pro',r'\1_\2\3\4',i) for i in names]
 	#print(*names);print('')
 	names=[re.sub(r'WP_(\d+?)_\d+',r'\1_000000',i) for i in names]
+
+	names=[re.sub(r'([A-Z,a-z,-]+_)+(\d+)_(\d+)',r'\2_\3',i) for i in names]
 	#print(*names)
 	dates=sorted([datetime.strptime(i,'%Y%m%d_%H%M%S') for i in names])
 	if printdates:
@@ -114,8 +116,8 @@ elif args.d :
 	#ax1.get_xaxis().set_visible(False)	
 	ax1.set_facecolor("#002f4f")
 	ax1.set_alpha(0.1)
-	ax1.tick_params(axis='y', colors='#ffc107')
-	ax1.tick_params(axis='x', colors='#ffc107')
+	ax1.tick_params(axis='y', colors='#ffc107', length=0, which='both')
+	ax1.tick_params(axis='x', colors='#ffc107', length=0, which='both')
 	#ax1.yaxis.label.set_color('#ffc107')
 	ax1.spines['bottom'].set_color('#001f3f')#'#ccc107')
 	ax1.spines['top'].set_color('#001f3f') 
@@ -126,29 +128,33 @@ elif args.d :
 	# to plot no bars on days no photo was taken a Count col with 0 created
 	cnts=ddf.groupby(p.Grouper(key='d',freq='D')).count()
 	positives=cnts[cnts.Count !=0].index
-	whatevr=cnts.plot(kind='bar', ax=ax1, color="#ffc107", legend=False)
+	whatevr=cnts.plot(kind='bar', ax=ax1, color="#002f4f", 
+		#color="#ffc107", 
+		legend=False, width=3)
 	ymax=whatevr.get_yticks()[-1]
 	onlypositives=[]
 	for xtic in whatevr.get_xticklabels():
 		pdate=xtic.get_text().split()[0]
 		if p.Timestamp(pdate) in positives:
-			onlypositives.append(pdate[8:])
+			if pdate[8:][0] == '0':
+				onlypositives.append(pdate[9:])
+			else:	
+				onlypositives.append(pdate[8:])
 		else:
 			onlypositives.append('')
-	whatevr.set_xticklabels(onlypositives, rotation=0)
+	whatevr.set_xticklabels(onlypositives, rotation=0, fontsize=8)
 	whatevr.xaxis.set_label_text('')
-	fc=["#ffee00", "#ffee55", "#ffee33",
+	fc=["orange", "#ffee55", "#ffee33",
 	"#ffcc33","#ffcc00","#ffcc22",
 	"#ffcc44","#ffaa33","#ffaa00",
 	"#ff8800", "#ff8822", "#ee8822"]
 	month_name=['Jan','Feb','Mar','Apr','May','Jun','July','Aug','Sep','Oct','Nov','Dec']
 	for month_ in cnts.index.month.unique():
-		print(month_)
-		print(month_name[month_-1])
+		#print(month_, (month_name[month_-1])
 		collection = col.BrokenBarHCollection.span_where(range(0,len(cnts)),
 			ymin=0, ymax=ymax, 
 			where=cnts.index.month==month_, 
-			facecolor=fc[month_-1], alpha=0.4)
+			facecolor=fc[month_-1], alpha=0.8)
 		bbox=collection.get_paths()[0].get_extents()
 		ax1.text(x=bbox.x0 + (bbox.x1-bbox.x0)/2, y=(bbox.y1-bbox.y0)/2, s=month_name[month_-1], 
 			color='#002f4f',fontsize=12)
@@ -166,11 +172,24 @@ elif args.cal:
 	mp.show()
 
 elif args.age:
-	print('days since last photo given tag '+ args.age,end=' ')
-	l=getDetailsGivenTag(args.age)
-	ddf=getDatesfromTagPhotoIDList(l, False)
-	lastdate=ddf[0].iloc[-1]
-	print('-',(datetime.today()-lastdate).days)
+	if args.age == 'all':
+		print('Days since last photo')
+		lall=[]
+		for tagname, tagcnt in tagdf.groupby(['name']).count()['photo_id_list'].sort_values().iteritems():#.to_string())
+			#print(tagname,end=' ')	
+			l=getDetailsGivenTag(tagname)
+			ddf=getDatesfromTagPhotoIDList(l, False)
+			lastdate=ddf[0].iloc[-1]
+			#print('-',(datetime.today()-lastdate).days)
+			lall.append((tagname,(datetime.today()-lastdate).days))
+		from pprint import pprint
+		pprint(sorted(lall, key=lambda x:x[1]))
+	else:
+		print('days since last photo given tag '+ args.age,end=' ')	
+		l=getDetailsGivenTag(args.age)
+		ddf=getDatesfromTagPhotoIDList(l, False)
+		lastdate=ddf[0].iloc[-1]
+		print('-',(datetime.today()-lastdate).days)
 else:
 	print('Photo count',len(g))
 	print('Tag count',len(f))

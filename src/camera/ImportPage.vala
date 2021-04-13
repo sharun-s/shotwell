@@ -1428,7 +1428,7 @@ public class ImportPage : CheckerboardPage {
         }
         files.sort();
 
-        bool showlatest=show_latest_checkbox.get_active();//Config.Facade.get_instance().get_show_photos_since_lastimport();
+        bool showlatest=Config.Facade.get_instance().get_show_photos_since_lastimport();//show_latest_checkbox.get_active();//
         ImportID last = MediaCollectionRegistry.get_instance().get_last_import_id();
         DateTime latest = new DateTime.from_unix_local(last.id);
 
