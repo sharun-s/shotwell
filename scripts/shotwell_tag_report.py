@@ -64,7 +64,7 @@ def getFilenamesfromTagPhotoIDList(tag_photoidlist):
 
 from datetime import datetime
 import re
-def getDatesfromTagPhotoIDList(tag_photoidlist):
+def getDatesfromTagPhotoIDList(tag_photoidlist, printdates=True):
 	# to convert id in tagtable to photoid strip away 'thumb' 
 	# (for other phototype prefixes look in shotwell sourcecode src/db/PhotoTable.vala,TagTable.vala ) 
 	# and convert remaining to hex
@@ -90,8 +90,8 @@ def getDatesfromTagPhotoIDList(tag_photoidlist):
 	names=[re.sub(r'WP_(\d+?)_\d+',r'\1_000000',i) for i in names]
 	#print(*names)
 	dates=sorted([datetime.strptime(i,'%Y%m%d_%H%M%S') for i in names])
-
-	print(*[i.strftime("%Y %d %b %H:%M") for i in dates],sep='\n') 
+	if printdates:
+		print(*[i.strftime("%Y %d %b %H:%M") for i in dates],sep='\n') 
 	datesdf=p.DataFrame(dates)
 	return datesdf
 
@@ -166,8 +166,23 @@ elif args.cal:
 	mp.show()
 
 elif args.age:
-	print('days since last photo given tag '+ args.age)
+	print('days since last photo given tag '+ args.age,end=' ')
+	l=getDetailsGivenTag(args.age)
+	ddf=getDatesfromTagPhotoIDList(l, False)
+	lastdate=ddf[0].iloc[-1]
+	print('-',(datetime.today()-lastdate).days)
 else:
 	print('Photo count',len(g))
 	print('Tag count',len(f))
-	print(tagdf.groupby(['name']).count()['photo_id_list'].sort_values().to_string())
+	for tagname, tagcnt in tagdf.groupby(['name']).count()['photo_id_list'].sort_values().iteritems():#.to_string())
+		print(tagname, tagcnt)
+		# dump all calendars
+		# if tagcnt>40:
+		# 	l=getDetailsGivenTag(tagname)
+		# 	ddf=getDatesfromTagPhotoIDList(l)
+		# 	ddf.columns=['d']
+		# 	ddf['Count']=0
+		# 	cnts=ddf.groupby(p.Grouper(key='d',freq='D')).count()
+		# 	events=p.Series(cnts.Count, index=cnts.index)
+		# 	fig,a=calplot.calplot(events, tight_layout=True, edgecolor=None, cmap='YlGn',colorbar=False, suptitle=tagname+'- photos per day',linewidth=1)
+		# 	fig.savefig(tagname+"_cal.png",format='png')

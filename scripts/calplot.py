@@ -309,7 +309,7 @@ def calplot(data, how='sum',
     ylabel_kws = dict(
         fontsize=30,
         color='gray',
-        fontname='Helvetica',
+        #fontname='Helvetica',
         fontweight='bold',
         ha='center')
     ylabel_kws.update(yearlabel_kws)
@@ -335,12 +335,11 @@ def calplot(data, how='sum',
         stitle_kws.update({'y': 1})
 
     if colorbar:
-        if tight_layout:
-            stitle_kws.update({'x': 0.425, 'y': 1.03})
+        #if tight_layout:
+        #    stitle_kws.update({'x': 0.425, 'y': 1.03})
 
         if len(years) == 1:
-            fig.colorbar(axes[0].get_children()[1], ax=axes.ravel().tolist(),
-                         orientation='vertical')
+            fig.colorbar(axes[0].get_children()[1], ax=axes.ravel().tolist(),orientation='vertical')
         else:
             fig.subplots_adjust(right=0.8)
             cax = fig.add_axes([0.85, 0.025, 0.02, 0.95])
