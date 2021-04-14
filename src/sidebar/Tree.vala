@@ -774,16 +774,26 @@ public class Sidebar.Tree : Gtk.TreeView {
         destroying_page(entry, page);
     }
     
-    public Gdk.Pixbuf drawtext_on_icon(string text,int x,int y){
+    public Gdk.Pixbuf drawtext_on_icon(string text,int x,int y, int age){
         var surface = new Cairo.ImageSurface(Cairo.Format.ARGB32, 32, 32);
         var context = new Cairo.Context(surface);
-        context.set_source_rgba(0.7,0.7,0.7,1);
         
+        if (age < 5)
+            context.set_source_rgba(0.2, 0.8, 0.2, 1);
+        else if (age < 15 ) {
+            context.set_source_rgba(0.6, 0.8, 0.2, 1);
+        }else {
+            context.set_source_rgba(0.9, 0.4, 0.2, 1);
+        }
+        context.rectangle(0, 0, 32, 32);
+        context.fill();
+
+        context.set_source_rgba(0.2,0.2,0.2,1);
         context.select_font_face("Sans", Cairo.FontSlant.NORMAL, Cairo.FontWeight.NORMAL);
         context.set_font_size(26);
         context.move_to(x, y);
         context.show_text(text);
-	return Gdk.pixbuf_get_from_surface(surface, 0, 0, surface.get_width(), surface.get_height());
+	    return Gdk.pixbuf_get_from_surface(surface, 0, 0, surface.get_width(), surface.get_height());
     }
     
     private void load_entry_icons(Gtk.TreeIter iter) {
@@ -797,7 +807,8 @@ public class Sidebar.Tree : Gtk.TreeView {
             if (name != null) {
                 int tmp = int.parse(name);
                 if (tmp > 0){
-                    icon=drawtext_on_icon(name, 1, 24);
+                    int age  = ((Tags.SidebarEntry)wrapper.entry).days_since_last_pic();
+                    icon=drawtext_on_icon(name, 1, 24, age);
                 }else{
                     //message("%s named icon",name);
                     icon = Icon.new_for_string (name);

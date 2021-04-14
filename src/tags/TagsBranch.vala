@@ -262,6 +262,10 @@ public class Tags.SidebarEntry : Sidebar.SimplePageEntry, Sidebar.RenameableEntr
         return tag.get_sources_count().to_string();//single_tag_icon;
     }
     
+    public int days_since_last_pic() {
+        return tag.days_since_last_pic();
+    }
+
     protected override Page create_page() {
         return new TagPage(tag);
     }

@@ -1115,6 +1115,36 @@ public class Tag : DataSource, ContainerSource, Proxyable, Indexable {
     public int get_sources_count() {
         return media_views.get_count();
     }
+
+    public int days_since_last_pic() {
+        // hack - cut and paste from Properties.vala get_multiple_properties - probably should be moved into a fn in viewcollection
+        Gee.Iterable<DataView> iter = (Gee.Iterable<DataView>) media_views.get_all();
+        time_t end_time=0;
+        foreach (DataView view in iter) {
+            DataSource source = view.get_source();
+
+            if (source is PhotoSource ) {
+                time_t exposure_time = ((PhotoSource) source).get_exposure_time();
+
+                if (exposure_time != 0) {
+                    if (end_time == 0 || exposure_time > end_time)
+                        end_time = exposure_time;
+                }
+            }
+        }
+        //DateTime dt = new DateTime.from_unix_local(end_time);
+        //debug(@"$dt");
+        Date d = Date();
+        d.set_time_t(end_time);
+        //debug("last pic taken %d/%d/%d", d.get_day(), d.get_month(), d.get_year() );
+        //DateTime now = new DateTime.now_local();
+        Date dnow = Date();
+        dnow.set_time_t(time_t());
+        //debug("now: %d/%d/%d", dnow.get_day(), dnow.get_month(), dnow.get_year() );
+        int diff = d.days_between(dnow);
+        //debug(@"$diff");
+        return diff;
+    }
     
     public Gee.Collection<MediaSource> get_sources() {
         return (Gee.Collection<MediaSource>) media_views.get_sources();
